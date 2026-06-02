@@ -3,28 +3,28 @@
  * Run with: npx ts-node setup_database.ts
  */
 import mysql from 'mysql2/promise';
+import dotenv from 'dotenv';
+import path from 'path';
+
+// Load .env
+dotenv.config({ path: path.resolve(__dirname, './.env') });
+dotenv.config({ path: path.resolve(__dirname, '../.env') });
+dotenv.config();
 
 async function setupDatabase() {
-  console.log('🔧 Setting up perpus_pmii database...\n');
+  const dbName = process.env.DB_NAME || 'perpus_pmii';
+  console.log(`🔧 Setting up database: ${dbName}...\n`);
 
-  // Connect without database to create it
   const connection = await mysql.createConnection({
-    host: 'localhost',
-    port: 3306,
-    user: 'root',
-    password: '',
+    host: process.env.DB_HOST || 'localhost',
+    port: parseInt(process.env.DB_PORT || '3306', 10),
+    user: process.env.DB_USER || 'root',
+    password: process.env.DB_PASSWORD || '',
+    database: dbName,
   });
 
-  // Drop existing database if exists to ensure clean refresh
-  await connection.query('DROP DATABASE IF EXISTS `perpus_pmii`');
-  console.log('🗑️ Existing database perpus_pmii dropped');
-
-  // Create database
-  await connection.query('CREATE DATABASE `perpus_pmii` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci');
-  console.log('✅ Database perpus_pmii created');
-
   // Switch to database
-  await connection.query('USE `perpus_pmii`');
+  await connection.query(`USE \`${dbName}\``);
 
   // ============================================
   // CREATE TABLES

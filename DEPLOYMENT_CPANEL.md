@@ -27,9 +27,9 @@ Frontend adalah aplikasi statis (SPA). Proses kompilasi (build) dilakukan di kom
 ### 1. Konfigurasi Environment Produksi
 Buka file `frontend/.env` atau buat jika belum ada, lalu sesuaikan URL API-nya ke subdomain produksi backend Anda:
 ```env
-VITE_API_URL=https://api.domainanda.com/api
+VITE_API_URL=https://api.buku.pmiiunusida.com
 ```
-*(Ganti `api.domainanda.com` dengan alamat subdomain API backend cPanel Anda)*.
+*(Menggunakan alamat subdomain API backend cPanel Anda)*.
 
 ### 2. Jalankan Build di Komputer Lokal
 Buka terminal pada direktori `frontend` lokal Anda, lalu jalankan:
@@ -83,7 +83,7 @@ File/folder penting yang wajib disertakan:
    - **Node.js Version**: Pilih versi stabil terbaru (rekomendasi: v18 atau v20).
    - **Application Mode**: Pilih `Production`.
    - **Application Root**: Isi dengan path folder backend Anda (misalnya `nodeapps/backend`).
-   - **Application URL**: Pilih subdomain untuk API Anda (misalnya `api.domainanda.com`).
+   - **Application URL**: Pilih subdomain untuk API Anda (yaitu `api.buku.pmiiunusida.com`).
    - **Application Startup File**: Isi dengan `dist/index.js` (ini adalah hasil kompilasi backend).
 4. Klik **Create** untuk menginisialisasi aplikasi.
 
@@ -137,7 +137,7 @@ Di halaman Setup Node.js App yang baru dibuat, gulir ke bagian **Environment var
 
 1. **Uji Health Check API**:
    Buka browser dan akses endpoint health check API Anda:
-   `https://api.domainanda.com/api/health`
+   `https://api.buku.pmiiunusida.com/health`
    Pastikan merespons status `healthy` dan koneksi database MySQL terhubung sukses.
 
 2. **Uji Frontend**:
@@ -147,5 +147,5 @@ Di halaman Setup Node.js App yang baru dibuat, gulir ke bagian **Environment var
 
 ## 💡 Troubleshooting & Tips Tambahan
 - **Folder Uploads**: Pastikan folder `/home/username/nodeapps/backend/uploads` ada dan memiliki hak akses baca-tulis (`chmod 755`) agar admin dapat mengunggah cover buku dengan lancar.
-- **Error CORS**: Jika frontend tidak dapat meminta data ke API backend, pastikan URL frontend sudah didaftarkan di konfigurasi CORS backend di `.env` (misal `CORS_ORIGIN=https://domainanda.com`).
+- **Error CORS**: Jika frontend tidak dapat meminta data ke API backend, pastikan URL frontend sudah didaftarkan di konfigurasi CORS backend di `.env` (yaitu `CORS_ORIGINS=https://buku.pmiiunusida.com`).
 - **Restart Aplikasi**: Setiap kali ada pembaruan kode backend, Anda harus menekan tombol **Restart** pada Setup Node.js App di cPanel agar server memuat kode JavaScript terbaru.

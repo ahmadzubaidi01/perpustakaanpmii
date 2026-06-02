@@ -7,15 +7,15 @@ dotenv.config({ path: path.resolve(__dirname, '../.env') });
 dotenv.config();
 
 async function setupDatabase() {
-  const dbName = process.env.DB_NAME || 'perpus_pmii';
+  const dbName = process.env.DB_NAME || 'pmiiunus_perpuspmii';
   console.log(`🔧 Setting up database: ${dbName}...\n`);
 
   // Connect using environment variables
   const connection = await mysql.createConnection({
-    host: process.env.DB_HOST || 'localhost',
+    host: process.env.DB_HOST || '127.0.0.1',
     port: parseInt(process.env.DB_PORT || '3306', 10),
-    user: process.env.DB_USER || 'root',
-    password: process.env.DB_PASSWORD || '',
+    user: process.env.DB_USER || 'pmiiunus_perpuspmii',
+    password: process.env.DB_PASSWORD || 'Intelektual@12',
     database: dbName,
     multipleStatements: true
   });
@@ -327,7 +327,7 @@ async function setupDatabase() {
   // ============================================
   const bcrypt = require('bcryptjs');
   const passwordHash = await bcrypt.hash('Intelektual@19', 12);
-  
+
   await connection.query(`
     INSERT IGNORE INTO users (user_id, full_name, email_address, password_hash, user_role, account_status)
     VALUES (1, 'Super Admin', 'admin@pmiiunusida.com', ?, 'super_admin', 'active')

@@ -123,7 +123,7 @@ const initials = computed(() => {
       <div class="h-16 flex items-center gap-3 px-6 border-b border-brand-blue-800">
         <img src="/logo.png" class="w-9 h-9 object-contain" alt="Logo PMII Lintang Songo" />
         <div>
-          <h1 class="text-lg font-bold leading-none tracking-wide text-brand-gold-100">BukuPMII</h1>
+          <h1 class="text-lg font-bold leading-none tracking-wide text-brand-gold-100">Buku PMII</h1>
           <span class="text-[10px] text-brand-blue-300 font-semibold tracking-wider uppercase">Lintang Songo</span>
         </div>
       </div>

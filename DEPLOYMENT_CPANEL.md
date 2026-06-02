@@ -62,13 +62,22 @@ Proses ini akan menghasilkan folder bernama **`dist`** di dalam folder `frontend
 
 Backend memerlukan lingkungan Node.js aktif di cPanel untuk menjalankan server Express.
 
-### 1. Kompres Source Code Backend
-Sebelum mengunggah, kompres berkas backend lokal Anda. 
-> [!IMPORTANT]
-> **JANGAN sertakan folder `node_modules` atau folder `dist` lokal** agar ukuran file unggahan kecil dan mencegah konflik library sistem operasi.
+### 1. Build Lokal & Kompres Backend
+Untuk menghindari kelebihan beban resource (CPU/RAM limit) di cPanel Shared Hosting, **build/kompilasi TypeScript backend dilakukan di komputer lokal Anda terlebih dahulu**:
 
-File/folder penting yang wajib disertakan:
-- `config/`, `controllers/`, `middleware/`, `models/`, `routes/`, `seeders/`, `services/`, `utils/`, `uploads/` (pastikan ada)
+1. Buka terminal pada folder `backend` lokal Anda, lalu jalankan:
+   ```bash
+   npm run build
+   ```
+   Perintah ini akan men-generate folder **`dist`** yang berisi javascript hasil kompilasi.
+2. Kompres folder `backend` menjadi ZIP untuk diunggah.
+   > [!IMPORTANT]
+   > * **WAJIB sertakan folder `dist`** hasil build lokal.
+   > * **JANGAN sertakan folder `node_modules`** agar ukuran zip kecil dan menghindari error OS mismatch.
+
+File/folder penting yang wajib dimasukkan dalam ZIP:
+- **`dist/`** (sangat penting!)
+- `config/`, `controllers/`, `middleware/`, `models/`, `routes/`, `seeders/`, `services/`, `utils/`, `uploads/`
 - `index.ts`, `setup_database.ts`, `package.json`, `package-lock.json`, `tsconfig.json`
 
 ### 2. Unggah dan Ekstrak di cPanel
@@ -101,21 +110,20 @@ Di halaman Setup Node.js App yang baru dibuat, gulir ke bagian **Environment var
 
 *Catatan: Anda juga bisa menyalin file `.env` secara manual ke dalam folder `/home/username/nodeapps/backend/.env` melalui File Manager.*
 
-### 5. Jalankan Install & Build di Server
+### 5. Jalankan Instalasi Dependency di Server
 1. Pada menu **Setup Node.js App**, salin perintah virtual environment (Command for entering to the virtual environment) yang tertera di bagian atas halaman. Contoh:
    ```bash
-   source /home/username/nodevenv/nodeapps/backend/20/bin/activate && cd /home/username/nodeapps/backend
+   source /home/username/nodevue/nodevenv/nodeapps/backend/20/bin/activate && cd /home/username/nodeapps/backend
    ```
-2. Buka fitur **Terminal** cPanel Anda dan jalankan perintah yang disalin tersebut untuk masuk ke env Node.js aplikasi Anda.
-3. Jalankan instalasi dependencies di Terminal tersebut:
+2. Buka fitur **Terminal** cPanel Anda, paste perintah tersebut dan jalankan untuk masuk ke virtual env.
+3. Jalankan instalasi dependensi di Terminal tersebut:
    ```bash
-   npm install
+   npm install --omit=dev
    ```
-4. Jalankan kompilasi TypeScript menjadi JavaScript:
-   ```bash
-   npm run build
-   ```
-   *Perintah ini akan membaca `tsconfig.json` dan menghasilkan folder `dist/` dengan berkas Javascript seperti `dist/index.js`.*
+   *(Menggunakan `--omit=dev` untuk hanya mengunduh dependensi produksi, sehingga proses instalasi di cPanel jauh lebih ringan dan cepat)*.
+
+   > [!NOTE]
+   > Kita tidak perlu menjalankan `npm run build` di terminal cPanel karena folder `dist/` sudah di-compile di lokal dan diunggah secara utuh.
 
 ---
 

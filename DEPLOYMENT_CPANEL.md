@@ -85,45 +85,77 @@ File/folder penting yang wajib dimasukkan dalam ZIP:
 2. Buat folder baru di luar `public_html` (misalnya di `/home/username/nodeapps/backend`).
 3. Unggah file zip backend Anda ke dalam folder tersebut dan lakukan **Extract**.
 
-### 3. Buat Aplikasi Node.js di cPanel
-1. Masuk ke cPanel dan cari fitur **Setup Node.js App**.
-2. Klik **Create Application**.
-3. Isi parameter konfigurasi berikut:
-   - **Node.js Version**: Pilih versi stabil terbaru (rekomendasi: v18 atau v20).
-   - **Application Mode**: Pilih `Production`.
-   - **Application Root**: Isi dengan path folder backend Anda (misalnya `nodeapps/backend`).
-   - **Application URL**: Pilih subdomain untuk API Anda (yaitu `api.buku.pmiiunusida.com`).
-   - **Application Startup File**: Isi dengan `dist/index.js` (ini adalah hasil kompilasi backend).
-4. Klik **Create** untuk menginisialisasi aplikasi.
-
-### 4. Konfigurasi Environment Variables (.env)
-Di halaman Setup Node.js App yang baru dibuat, gulir ke bagian **Environment variables** dan tambahkan key-value berikut:
-- `PORT` = `5000` (atau biarkan default cPanel)
-- `NODE_ENV` = `production`
-- `DB_HOST` = `127.0.0.1` (atau alamat host database cPanel Anda)
-- `DB_USER` = `username_dbuser` (User database MySQL yang dibuat di cPanel)
-- `DB_PASS` = `password_anda` (Password user database)
-- `DB_NAME` = `username_dbname` (Nama database MySQL)
-- `DB_PORT` = `3306`
-- `JWT_ACCESS_SECRET` = `buat_string_acak_panjang_disini`
-- `JWT_REFRESH_SECRET` = `buat_string_acak_panjang_lainnya`
-
-*Catatan: Anda juga bisa menyalin file `.env` secara manual ke dalam folder `/home/username/nodeapps/backend/.env` melalui File Manager.*
-
-### 5. Jalankan Instalasi Dependency di Server
-1. Pada menu **Setup Node.js App**, salin perintah virtual environment (Command for entering to the virtual environment) yang tertera di bagian atas halaman. Contoh:
-   ```bash
-   source /home/username/nodevue/nodevenv/nodeapps/backend/20/bin/activate && cd /home/username/nodeapps/backend
+### 3. Konfigurasi Environment Variables (.env)
+Sebelum menjalankan backend, buat file konfigurasi `.env` di server:
+1. Copy file `backend/.env.example` menjadi `backend/.env` di server menggunakan File Manager cPanel.
+2. Edit file `.env` tersebut dan masukkan nilai berikut:
+   ```env
+   NODE_ENV=production
+   PORT=5000
+   APP_NAME="Buku PMII"
+   APP_URL=https://api.buku.pmiiunusida.com
+   FRONTEND_URL=https://buku.pmiiunusida.com
+   DB_HOST=127.0.0.1
+   DB_USER=username_dbuser
+   DB_PASSWORD=password_anda
+   DB_NAME=username_dbname
+   DB_PORT=3306
+   JWT_ACCESS_SECRET=buat_string_acak_panjang_disini
+   JWT_REFRESH_SECRET=buat_string_acak_panjang_lainnya
+   CORS_ORIGINS=https://buku.pmiiunusida.com,http://localhost:5173
    ```
-2. Buka fitur **Terminal** cPanel Anda, paste perintah tersebut dan jalankan untuk masuk ke virtual env.
-3. Jalankan instalasi dependensi di Terminal tersebut:
+
+---
+
+### 4. Menjalankan Aplikasi di Server (Pilih Salah Satu Metode)
+
+Tergantung fitur cPanel Anda, pilih salah satu metode di bawah ini untuk menjalankan server Node.js:
+
+#### Opsi A: Menggunakan Menu "Setup Node.js App" (Rekomendasi jika ada)
+1. Masuk ke cPanel dan buka menu **Setup Node.js App**.
+2. Klik **Create Application** dan isi konfigurasi:
+   - **Node.js Version**: Pilih versi stabil (misal v18 atau v20).
+   - **Application Mode**: `Production`.
+   - **Application Root**: Path folder backend Anda (misal `nodeapps/backend`).
+   - **Application URL**: Pilih subdomain API Anda (`api.buku.pmiiunusida.com`).
+   - **Application Startup File**: Isi dengan **`dist/index.js`**.
+3. Klik **Create**.
+4. Salin baris perintah virtual environment di bagian atas halaman (contoh: `source /home/username/.../activate && cd ...`).
+5. Buka **Terminal** cPanel, paste perintah tersebut lalu jalankan:
    ```bash
    npm install --omit=dev
    ```
-   *(Menggunakan `--omit=dev` untuk hanya mengunduh dependensi produksi, sehingga proses instalasi di cPanel jauh lebih ringan dan cepat)*.
+6. Buka kembali halaman Setup Node.js App dan klik **Restart**.
 
-   > [!NOTE]
-   > Kita tidak perlu menjalankan `npm run build` di terminal cPanel karena folder `dist/` sudah di-compile di lokal dan diunggah secara utuh.
+#### Opsi B: Menggunakan Terminal SSH & PM2 (Jika "Setup Node.js App" tidak ada)
+Jika hosting Anda tidak menyediakan antarmuka pembuat aplikasi Node.js, Anda bisa menjalankannya langsung melalui Terminal/SSH:
+1. Buka **Terminal** bawaan cPanel atau koneksikan SSH.
+2. Pindah ke direktori backend Anda:
+   ```bash
+   cd ~/nodeapps/backend
+   ```
+3. Instal dependencies produksi:
+   ```bash
+   npm install --omit=dev
+   ```
+4. Jalankan aplikasi di background menggunakan **PM2** agar server otomatis restart jika terjadi crash:
+   ```bash
+   npx pm2 start dist/index.js --name "buku-pmii-api"
+   ```
+   *(Jika PM2 belum terpasang, perintah npx di atas akan otomatis mengunduh dan menjalankannya).*
+5. **Konfigurasi Reverse Proxy (.htaccess)**:
+   Karena backend berjalan di port internal (misal port `5000`), kita perlu mengarahkan traffic dari subdomain API (`api.buku.pmiiunusida.com`) ke port tersebut.
+   * Buka File Manager cPanel, masuk ke folder root subdomain Anda (misal `public_html/api` atau folder subdomain Anda).
+   * Buat/edit file `.htaccess` di folder tersebut dan isi dengan rule proxy berikut:
+     ```apache
+     DirectoryIndex disabled
+     RewriteEngine On
+     RewriteRule ^$ http://127.0.0.1:5000/ [P,L]
+     RewriteCond %{REQUEST_FILENAME} !-f
+     RewriteCond %{REQUEST_FILENAME} !-d
+     RewriteRule ^(.*)$ http://127.0.0.1:5000/$1 [P,L]
+     ```
+     *(Rule ini mengalihkan semua request secara transparan dari `https://api.buku.pmiiunusida.com/*` ke port `5000`)*.
 
 ---
 

@@ -167,7 +167,7 @@ Jika hosting Anda tidak menyediakan antarmuka pembuat aplikasi Node.js, Anda bis
 4. Hubungkan user ke database tersebut dengan memilih opsi **ALL PRIVILEGES**.
 5. Untuk membuat tabel-tabel dan mengisi data awal (seeder admin default), Anda bisa menjalankan skrip inisialisasi database melalui terminal cPanel (dalam virtual env backend):
    ```bash
-   npx ts-node setup_database.ts
+   node dist/setup_database.js
    ```
    *Skrip ini akan otomatis membuat tabel, relasi, dan menambahkan akun administrator default.*
 

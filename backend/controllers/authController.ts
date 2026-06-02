@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import bcrypt from 'bcrypt';
+import bcrypt from 'bcryptjs';
 import { Op } from 'sequelize';
 import { User, RefreshToken, UserSession, PasswordReset, Faculty, StudyProgram } from '../models';
 import { generateAccessToken, generateRefreshToken, verifyRefreshToken, JwtPayload } from '../middleware/auth';

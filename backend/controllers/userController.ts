@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import bcrypt from 'bcrypt';
+import bcrypt from 'bcryptjs';
 import { Op } from 'sequelize';
 import { User, Faculty, StudyProgram } from '../models';
 import { AuditActionType, TABLE_NAMES, UserRole, AccountStatus } from '../config/constants';

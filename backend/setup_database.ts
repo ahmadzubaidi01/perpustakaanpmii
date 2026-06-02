@@ -307,7 +307,7 @@ async function setupDatabase() {
   // ============================================
   // SEED DEFAULT SUPER ADMIN
   // ============================================
-  const bcrypt = require('bcrypt');
+  const bcrypt = require('bcryptjs');
   const passwordHash = await bcrypt.hash('Intelektual@19', 12);
   
   await connection.query(`

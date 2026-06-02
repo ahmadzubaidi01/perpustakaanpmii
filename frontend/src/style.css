@@ -1,0 +1,56 @@
+@import "tailwindcss";
+
+@variant dark (&:where(.dark, .dark *));
+
+@theme {
+  --color-brand-blue-50: #eff6ff;
+  --color-brand-blue-100: #dbeafe;
+  --color-brand-blue-500: #0f4c81;
+  --color-brand-blue-600: #0d3f6d;
+  --color-brand-blue-700: #0a3359;
+  --color-brand-blue-800: #082947;
+  --color-brand-blue-900: #061e33;
+
+  --color-brand-gold-50: #fffbeb;
+  --color-brand-gold-100: #fef3c7;
+  --color-brand-gold-500: #f59e0b;
+  --color-brand-gold-600: #d97706;
+  --color-brand-gold-700: #b45309;
+
+  --color-dark-bg: #0b0f19;
+  --color-dark-card: #151b2c;
+  --color-dark-border: #1e293b;
+}
+
+/* Custom Base / Global Styles */
+@layer base {
+  body {
+    background-color: #f8fafc;
+    color: #0f172a;
+    font-family: 'Outfit', 'Inter', system-ui, sans-serif;
+  }
+
+  .dark body {
+    background-color: var(--color-dark-bg);
+    color: #f1f5f9;
+  }
+}
+
+/* Scrollbar customization */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 4px;
+}
+.dark ::-webkit-scrollbar-thumb {
+  background: #334155;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}

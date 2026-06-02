@@ -1,115 +1,151 @@
-# Panduan Deployment Lengkap ke cPanel
+# Panduan Deployment & Upload Perpustakaan Digital Lintang Songo ke cPanel
 
-Berikut adalah panduan lengkap dan sistematis untuk men-deploy aplikasi **Perpustakaan Digital** dengan arsitektur terbaru (API Terpisah + WebSocket Microservice + BullMQ), disesuaikan dengan alur kerja Anda: **Frontend di-build lokal, Backend di-build di cPanel.**
+Panduan ini berisi langkah-langkah terperinci untuk mengunggah dan menjalankan aplikasi **Perpustakaan Digital PMII Lintang Songo** ke hosting cPanel Anda.
+
+Aplikasi kita terbagi menjadi dua bagian utama:
+1. **Frontend**: Aplikasi Single Page Application (SPA) berbasis **Vite + Vue 3**.
+2. **Backend**: REST API Server berbasis **Node.js Express + TypeScript** dengan database **MySQL**.
 
 ---
 
-## TAHAP 1: Konfigurasi & Build Frontend (Lokal)
-
-Karena Anda melakukan proses *build* Next.js di komputer lokal, pastikan seluruh referensi URL sudah menunjuk ke *production* (cPanel) sebelum perintah build dijalankan.
-
-### 1. Update `.env` Frontend
-Di komputer lokal Anda, *copy* template file environment menjadi file asli, lalu pastikan URL-nya sudah presisi:
-```bash
-cp .env.example .env
+## Ringkasan Alur Deployment
+```mermaid
+graph TD
+    A[Komputer Lokal] -->|Build Frontend| B(dist/ folder)
+    B -->|Upload & Extract| C[cPanel public_html / Subdomain Root]
+    A -->|Zip Source Code Backend| D(backend.zip)
+    D -->|Upload & Extract| E[cPanel Setup Node.js App]
+    E -->|Install & Build| F[Aplikasi Live di Subdomain API]
 ```
-Buka file `frontend/.env` dan pastikan isinya seperti ini:
+
+---
+
+## 🚀 Langkah 1: Build & Deploy Frontend (Lokal ke cPanel)
+
+Frontend adalah aplikasi statis (SPA). Proses kompilasi (build) dilakukan di komputer lokal Anda, lalu hasilnya diunggah ke cPanel.
+
+### 1. Konfigurasi Environment Produksi
+Buka file `frontend/.env` atau buat jika belum ada, lalu sesuaikan URL API-nya ke subdomain produksi backend Anda:
 ```env
-NEXT_PUBLIC_API_URL=https://api.perpustakaanahmad.my.id
-NEXT_PUBLIC_SOCKET_URL=https://socket.perpustakaanahmad.my.id
+VITE_API_URL=https://api.domainanda.com/api
 ```
+*(Ganti `api.domainanda.com` dengan alamat subdomain API backend cPanel Anda)*.
 
-### 2. Jalankan Build Lokal
-Buka terminal di folder `frontend`, lalu jalankan:
+### 2. Jalankan Build di Komputer Lokal
+Buka terminal pada direktori `frontend` lokal Anda, lalu jalankan:
 ```bash
-npm install
 npm run build
 ```
+Proses ini akan menghasilkan folder bernama **`dist`** di dalam folder `frontend`.
 
-### 3. Upload Hasil Build ke cPanel
-Setelah proses build selesai 100%, Anda **hanya perlu** meng-upload folder & file berikut dari komputer lokal ke cPanel, tepatnya di dalam direktori `nodeapps/perpustakaandigital/frontend`:
-- Folder `.next`
-- Folder `public`
-- File `package.json`
-- *(Lalu jalankan `npm install --production` di terminal cPanel khusus untuk frontend, dan start aplikasinya via Setup Node.js App)*.
+### 3. Unggah ke cPanel
+1. Masuk ke **cPanel File Manager**.
+2. Buka folder tujuan website utama Anda (misal `public_html` atau root folder subdomain Anda).
+3. Kompres/Zip isi dari folder `frontend/dist` (jangan zip folder `dist`-nya sendiri, melainkan file-file di dalamnya seperti `index.html`, `assets/`, `logo.png`, dll).
+4. Unggah file zip tersebut ke File Manager dan lakukan **Extract**.
+5. Tambahkan atau konfigurasi file `.htaccess` di root folder tersebut agar routing SPA (Vue Router) dapat bekerja dengan baik saat halaman di-refresh:
+
+```apache
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  RewriteBase /
+  RewriteRule ^index\.html$ - [L]
+  RewriteCond %{REQUEST_FILENAME} !-f
+  RewriteCond %{REQUEST_FILENAME} !-d
+  RewriteRule . /index.html [L]
+</IfModule>
+```
 
 ---
 
-## TAHAP 2: Konfigurasi & Build Mobile App (Lokal)
+## ⚙️ Langkah 2: Deploy Backend (Express Node.js)
 
-Aplikasi mobile perlu dikompilasi (di-build) ulang agar menggunakan URL server cPanel Anda, bukan localhost.
+Backend memerlukan lingkungan Node.js aktif di cPanel untuk menjalankan server Express.
 
-### 1. Update Konfigurasi Tema/URL
-Buka file `mobile/src/constants/theme.ts` di komputer lokal, pastikan URL mengarah ke domain asli Anda:
-```typescript
-export const API_BASE_URL = 'https://api.perpustakaanahmad.my.id';
-export const SOCKET_URL = 'https://socket.perpustakaanahmad.my.id';
-```
-*(Catatan: Logika di `mobile/src/services/socket.ts` sudah di-setting otomatis agar membaca `SOCKET_URL` saat di-build).*
+### 1. Kompres Source Code Backend
+Sebelum mengunggah, kompres berkas backend lokal Anda. 
+> [!IMPORTANT]
+> **JANGAN sertakan folder `node_modules` atau folder `dist` lokal** agar ukuran file unggahan kecil dan mencegah konflik library sistem operasi.
 
-### 2. Build APK/AAB
-Lakukan *build* menggunakan EAS atau perintah lokal (contoh: `eas build -p android --profile production`). Setelah selesai, bagikan file APK tersebut ke pengguna.
+File/folder penting yang wajib disertakan:
+- `config/`, `controllers/`, `middleware/`, `models/`, `routes/`, `seeders/`, `services/`, `utils/`, `uploads/` (pastikan ada)
+- `index.ts`, `setup_database.ts`, `package.json`, `package-lock.json`, `tsconfig.json`
 
----
+### 2. Unggah dan Ekstrak di cPanel
+1. Masuk ke **File Manager** cPanel.
+2. Buat folder baru di luar `public_html` (misalnya di `/home/username/nodeapps/backend`).
+3. Unggah file zip backend Anda ke dalam folder tersebut dan lakukan **Extract**.
 
-## TAHAP 3: Persiapan & Build Backend (di cPanel)
-
-Pastikan Anda meng-upload seluruh *source code* backend (kecuali `node_modules` dan `dist`) dari komputer lokal ke cPanel, ke dalam direktori `nodeapps/perpustakaandigital/backend`.
-
-### 1. Konfigurasi Redis (Upstash) & Database
-Microservice Socket dan BullMQ (Background Job) membutuhkan Redis. Salin file template *environment* di cPanel untuk diaktifkan:
-- Buka fitur **Terminal** cPanel atau SSH.
-- Copy file environment:
-  ```bash
-  cd /home/ujpeo5ni/nodeapps/perpustakaandigital/backend
-  cp .env.example .env
-  ```
-- Buka file `.env` tersebut dan pastikan konfigurasi Redis Cloud Anda sudah aktif:
-```env
-REDIS_ENABLED=true
-REDIS_URL=rediss://default:PASSWORD_ANDA@natural-mosquito-81524.upstash.io:6379
-```
-
-### 2. Build Backend via Terminal cPanel
-Buka fitur **Terminal** bawaan cPanel. Untuk mem-build backend, masuk ke direktori aplikasi Anda dan kompilasi:
-```bash
-cd /home/ujpeo5ni/nodeapps/perpustakaandigital/backend
-npm install
-npm run build
-```
-Jika sukses, folder `dist` akan otomatis terbentuk di dalam direktori tersebut.
-
----
-
-## TAHAP 4: Menghidupkan Layanan di cPanel (Phusion Passenger)
-
-Karena aplikasi Backend terbelah dua (Express API dan Socket Microservice), kita akan menggunakan Setup Node.js App untuk masing-masing fungsi berdasarkan struktur direktori Anda.
-
-### 1. Hidupkan Aplikasi 1 (Express API Utama)
-1. Buka menu **Setup Node.js App** di cPanel.
+### 3. Buat Aplikasi Node.js di cPanel
+1. Masuk ke cPanel dan cari fitur **Setup Node.js App**.
 2. Klik **Create Application**.
-3. **App Root**: Isi dengan `nodeapps/perpustakaandigital/backend`.
-4. **App URL**: Pilih domain `api.perpustakaanahmad.my.id`.
-5. **Application startup file**: Isi dengan `dist/index.js`.
-6. Simpan & klik **Start**.
+3. Isi parameter konfigurasi berikut:
+   - **Node.js Version**: Pilih versi stabil terbaru (rekomendasi: v18 atau v20).
+   - **Application Mode**: Pilih `Production`.
+   - **Application Root**: Isi dengan path folder backend Anda (misalnya `nodeapps/backend`).
+   - **Application URL**: Pilih subdomain untuk API Anda (misalnya `api.domainanda.com`).
+   - **Application Startup File**: Isi dengan `dist/index.js` (ini adalah hasil kompilasi backend).
+4. Klik **Create** untuk menginisialisasi aplikasi.
 
-### 2. Hidupkan Aplikasi 2 (WebSocket Microservice)
-Karena cPanel menolak dua aplikasi menggunakan satu root folder, Anda sudah membuat folder duplikatnya.
-1. Di **File Manager** cPanel, pastikan direktori `nodeapps/perpustakaandigital/backend_socket` sudah berisi *copy* identik dari hasil build di direktori `backend` Anda.
-2. Buka menu **Setup Node.js App**.
-3. Klik **Create Application**.
-4. **App Root**: Isi dengan folder salinan Anda, yaitu `nodeapps/perpustakaandigital/backend_socket`.
-5. **App URL**: Pilih subdomain khusus socket yaitu `socket.perpustakaanahmad.my.id`.
-6. **Application startup file**: Isi dengan `dist/socket-server.js`.
-7. Simpan & klik **Start**.
+### 4. Konfigurasi Environment Variables (.env)
+Di halaman Setup Node.js App yang baru dibuat, gulir ke bagian **Environment variables** dan tambahkan key-value berikut:
+- `PORT` = `5000` (atau biarkan default cPanel)
+- `NODE_ENV` = `production`
+- `DB_HOST` = `127.0.0.1` (atau alamat host database cPanel Anda)
+- `DB_USER` = `username_dbuser` (User database MySQL yang dibuat di cPanel)
+- `DB_PASS` = `password_anda` (Password user database)
+- `DB_NAME` = `username_dbname` (Nama database MySQL)
+- `DB_PORT` = `3306`
+- `JWT_ACCESS_SECRET` = `buat_string_acak_panjang_disini`
+- `JWT_REFRESH_SECRET` = `buat_string_acak_panjang_lainnya`
 
-*(Catatan: Anda tidak perlu khawatir tentang port 5001. Passenger cPanel otomatis menerjemahkan trafik HTTPS standar ke script `dist/socket-server.js` Anda).*
+*Catatan: Anda juga bisa menyalin file `.env` secara manual ke dalam folder `/home/username/nodeapps/backend/.env` melalui File Manager.*
 
-### 3. Opsional: Menghidupkan Sync Worker (BullMQ)
-Proses sinkronisasi data offline (BullMQ Worker) harus berjalan di belakang layar. Jika ingin menjalankannya:
-- Buka Terminal cPanel.
-- Masuk ke virtual environment Node.js Anda (jika ada), atau jalankan langsung:
-  ```bash
-  node /home/ujpeo5ni/nodeapps/perpustakaandigital/backend/dist/workers/syncWorker.js
-  ```
-- *Catatan: Untuk membuatnya berjalan permanen 24 jam di shared hosting, Anda mungkin perlu berkonsultasi dengan penyedia hosting Anda mengenai instalasi PM2 atau setup Cron Job yang me-restart worker jika mati.*
+### 5. Jalankan Install & Build di Server
+1. Pada menu **Setup Node.js App**, salin perintah virtual environment (Command for entering to the virtual environment) yang tertera di bagian atas halaman. Contoh:
+   ```bash
+   source /home/username/nodevenv/nodeapps/backend/20/bin/activate && cd /home/username/nodeapps/backend
+   ```
+2. Buka fitur **Terminal** cPanel Anda dan jalankan perintah yang disalin tersebut untuk masuk ke env Node.js aplikasi Anda.
+3. Jalankan instalasi dependencies di Terminal tersebut:
+   ```bash
+   npm install
+   ```
+4. Jalankan kompilasi TypeScript menjadi JavaScript:
+   ```bash
+   npm run build
+   ```
+   *Perintah ini akan membaca `tsconfig.json` dan menghasilkan folder `dist/` dengan berkas Javascript seperti `dist/index.js`.*
+
+---
+
+## 🗄️ Langkah 3: Konfigurasi Database (MySQL)
+
+1. Di cPanel, buka **MySQL Database Wizard**.
+2. Buat database baru (misal: `perpus_pmii`).
+3. Buat user database baru dan buat password yang kuat.
+4. Hubungkan user ke database tersebut dengan memilih opsi **ALL PRIVILEGES**.
+5. Untuk membuat tabel-tabel dan mengisi data awal (seeder admin default), Anda bisa menjalankan skrip inisialisasi database melalui terminal cPanel (dalam virtual env backend):
+   ```bash
+   npx ts-node setup_database.ts
+   ```
+   *Skrip ini akan otomatis membuat tabel, relasi, dan menambahkan akun administrator default.*
+
+---
+
+## 🔍 Langkah 4: Uji Coba Deployment
+
+1. **Uji Health Check API**:
+   Buka browser dan akses endpoint health check API Anda:
+   `https://api.domainanda.com/api/health`
+   Pastikan merespons status `healthy` dan koneksi database MySQL terhubung sukses.
+
+2. **Uji Frontend**:
+   Buka alamat website utama Anda, pastikan logo komisariat tampil di tab browser (favicon) dan layout memuat data dengan benar tanpa ada error CORS.
+
+---
+
+## 💡 Troubleshooting & Tips Tambahan
+- **Folder Uploads**: Pastikan folder `/home/username/nodeapps/backend/uploads` ada dan memiliki hak akses baca-tulis (`chmod 755`) agar admin dapat mengunggah cover buku dengan lancar.
+- **Error CORS**: Jika frontend tidak dapat meminta data ke API backend, pastikan URL frontend sudah didaftarkan di konfigurasi CORS backend di `.env` (misal `CORS_ORIGIN=https://domainanda.com`).
+- **Restart Aplikasi**: Setiap kali ada pembaruan kode backend, Anda harus menekan tombol **Restart** pada Setup Node.js App di cPanel agar server memuat kode JavaScript terbaru.

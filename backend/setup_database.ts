@@ -1,13 +1,8 @@
-/**
- * Create the perpus_pmii database and all tables for the new schema.
- * Run with: npx ts-node setup_database.ts
- */
 import mysql from 'mysql2/promise';
 import dotenv from 'dotenv';
 import path from 'path';
 
-// Load .env
-dotenv.config({ path: path.resolve(__dirname, './.env') });
+// Load environment variables
 dotenv.config({ path: path.resolve(__dirname, '../.env') });
 dotenv.config();
 
@@ -15,16 +10,39 @@ async function setupDatabase() {
   const dbName = process.env.DB_NAME || 'perpus_pmii';
   console.log(`🔧 Setting up database: ${dbName}...\n`);
 
+  // Connect using environment variables
   const connection = await mysql.createConnection({
     host: process.env.DB_HOST || 'localhost',
     port: parseInt(process.env.DB_PORT || '3306', 10),
     user: process.env.DB_USER || 'root',
     password: process.env.DB_PASSWORD || '',
     database: dbName,
+    multipleStatements: true
   });
 
-  // Switch to database
-  await connection.query(`USE \`${dbName}\``);
+  // Disable foreign key checks for clean drop/create
+  await connection.query('SET FOREIGN_KEY_CHECKS = 0');
+
+  // Drop tables
+  const tables = [
+    'user_sessions',
+    'audit_logs',
+    'notifications',
+    'refresh_tokens',
+    'password_resets',
+    'borrowings',
+    'borrowing_settings',
+    'book_barcodes',
+    'books',
+    'users',
+    'book_categories',
+    'study_programs',
+    'faculties'
+  ];
+  for (const table of tables) {
+    await connection.query(`DROP TABLE IF EXISTS \`${table}\``);
+  }
+  console.log('🗑️ All existing tables dropped');
 
   // ============================================
   // CREATE TABLES
@@ -361,9 +379,10 @@ async function setupDatabase() {
   `);
   console.log('✅ Sample book categories seeded');
 
+  await connection.query('SET FOREIGN_KEY_CHECKS = 1');
   await connection.end();
   console.log('\n🎉 Database setup complete!');
-  console.log('   Database: perpus_pmii');
+  console.log(`   Database: ${dbName}`);
   console.log('   Tables: 13');
   console.log('   Super Admin: admin@pmiiunusida.com / Intelektual@19');
 }

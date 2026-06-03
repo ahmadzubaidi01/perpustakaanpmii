@@ -87,10 +87,13 @@ export const useAuthStore = defineStore('auth', {
   } catch (err: any) {
   console.error('LOGIN ERROR:', err);
 
-  alert(JSON.stringify(err));
+  const message =
+    err.response?.data?.message ||
+    'Email atau password salah';
 
-  throw err;
-  } finally {
+  throw new Error(message);
+      }
+  finally {
     this.loading = false;
   }
     },
@@ -105,19 +108,33 @@ export const useAuthStore = defineStore('auth', {
     },
 
     async logout() {
-      this.loading = true;
-      try {
-        const refreshToken = Cookies.get('refreshToken');
-        await api.post('/v1/auth/logout', { refresh_token: refreshToken });
-      } catch (err) {
-        console.error('Logout error', err);
-      } finally {
-        this.user = null;
-        Cookies.remove('accessToken');
-        Cookies.remove('refreshToken');
-        window.location.href = '/login';
-        this.loading = false;
-      }
+  this.loading = true;
+
+  try {
+    const refreshToken = Cookies.get('refreshToken');
+
+    console.log('Refresh Token:', refreshToken);
+
+    const res = await api.post('/v1/auth/logout', {
+      refresh_token: refreshToken,
+    });
+
+    console.log('LOGOUT RESPONSE:', res.data);
+  } catch (err: any) {
+    console.error('LOGOUT ERROR:', err.response?.data || err);
+  } finally {
+    this.user = null;
+
+    Cookies.remove('accessToken');
+    Cookies.remove('refreshToken');
+
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+
+    this.loading = false;
+
+    window.location.href = '/login';
+  }
     },
   },
 });

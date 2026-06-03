@@ -63,23 +63,34 @@ export const useAuthStore = defineStore('auth', {
 
 
     async login(payload: { email_address: string; password: string }) {
-      this.loading = true;
-      try {
-        const res: any = await api.post('/v1/auth/login', payload);
-        const { user, tokens } = res.data;
-        const accessToken = tokens?.access_token;
-        const refreshToken = tokens?.refresh_token;
+  this.loading = true;
 
-        Cookies.set('accessToken', accessToken, { expires: 1 / 24 }); // 1 hour
-        if (refreshToken) {
-          Cookies.set('refreshToken', refreshToken, { expires: 7 }); // 7 days
-        }
-        this.user = user;
+  try {
+    const res: any = await api.post('/v1/auth/login', payload);
 
-        return user;
-      } finally {
-        this.loading = false;
-      }
+    console.log('LOGIN RESPONSE:', res);
+
+    const { user, tokens } = res.data;
+
+    const accessToken = tokens?.access_token;
+    const refreshToken = tokens?.refresh_token;
+
+    Cookies.set('accessToken', accessToken, { expires: 1 / 24 });
+
+    if (refreshToken) {
+      Cookies.set('refreshToken', refreshToken, { expires: 7 });
+    }
+
+    this.user = user;
+
+    return user;
+  } catch (err) {
+    console.error('LOGIN ERROR:', err);
+    throw err;
+  } finally {
+    this.loading = false;
+  }
+}
     },
 
     async register(payload: any) {

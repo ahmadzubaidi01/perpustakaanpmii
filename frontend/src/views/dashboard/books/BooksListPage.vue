@@ -199,8 +199,14 @@ const submitEditBook = async () => {
     showEditModal.value = false;
     fetchBooks();
   } catch (err: any) {
-    errorMsg.value = err.message || 'Gagal memperbarui buku';
-  } finally {
+  console.error('ADD BOOK ERROR:', err);
+
+  errorMsg.value =
+    err?.message ||
+    err?.error?.message ||
+    err?.data?.message ||
+    'Gagal menambahkan buku';
+} finally {
     submitLoading.value = false;
   }
 };

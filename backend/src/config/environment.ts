@@ -1,7 +1,7 @@
 import dotenv from 'dotenv';
 import path from 'path';
 
-dotenv.config({ path: path.resolve(__dirname, '../.env'), override: true });
+dotenv.config({ path: path.resolve(__dirname, '../../.env'), override: true });
 dotenv.config({ override: true });
 
 const env = {
@@ -23,14 +23,6 @@ const env = {
   DB_POOL_ACQUIRE: parseInt(process.env.DB_POOL_ACQUIRE || '30000', 10),
   DB_POOL_IDLE: parseInt(process.env.DB_POOL_IDLE || '10000', 10),
   DB_LOGGING: process.env.DB_LOGGING === 'true',
-
-  // Redis
-  REDIS_ENABLED: process.env.REDIS_ENABLED === 'true',
-  REDIS_HOST: process.env.REDIS_HOST || 'localhost',
-  REDIS_PORT: parseInt(process.env.REDIS_PORT || '6379', 10),
-  REDIS_PASSWORD: process.env.REDIS_PASSWORD || '',
-  REDIS_DB: parseInt(process.env.REDIS_DB || '0', 10),
-  REDIS_KEY_PREFIX: process.env.REDIS_KEY_PREFIX || 'pmii:',
 
   // JWT
   JWT_ACCESS_SECRET: process.env.JWT_ACCESS_SECRET || '',

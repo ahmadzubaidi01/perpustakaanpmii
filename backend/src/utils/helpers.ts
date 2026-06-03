@@ -45,7 +45,6 @@ export const generateBorrowingCode = (): string => {
   return `BR-${datePart}-${random}`;
 };
 
-
 /**
  * Generate a URL-safe slug from text.
  */

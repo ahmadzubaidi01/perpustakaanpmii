@@ -6,7 +6,6 @@ import apiResponse from '../utils/apiResponse';
 import { asyncHandler } from '../middleware/errorHandler';
 import { createAuditLog, buildAuditFromRequest } from '../services/auditService';
 import { PAGINATION_DEFAULTS } from '../config/constants';
-import { generateUUID } from '../utils/helpers';
 
 const generateBorrowingCode = (): string => {
   const date = new Date();

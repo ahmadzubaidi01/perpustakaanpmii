@@ -5,6 +5,7 @@ import apiResponse from '../utils/apiResponse';
 import { asyncHandler } from '../middleware/errorHandler';
 import { createAuditLog, buildAuditFromRequest } from '../services/auditService';
 import { generateUniqueSlug } from '../utils/helpers';
+import { Op } from 'sequelize';
 
 const listCategories = asyncHandler(async (req: Request, res: Response): Promise<void> => {
   const categories = await BookCategory.findAll({
@@ -123,7 +124,5 @@ const deleteCategory = asyncHandler(async (req: Request, res: Response): Promise
   await createAuditLog(buildAuditFromRequest(req, AuditActionType.SOFT_DELETE, TABLE_NAMES.BOOK_CATEGORIES, category.category_id));
   apiResponse.success(res, 'Category deleted');
 });
-
-import { Op } from 'sequelize';
 
 export { listCategories, getCategory, createCategory, updateCategory, deleteCategory };

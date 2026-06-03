@@ -70,7 +70,7 @@ const getDashboard = asyncHandler(async (req: Request, res: Response): Promise<v
     attributes: [
       [fn('YEAR', col('returned_at')), 'year'],
       [fn('MONTH', col('returned_at')), 'month'],
-      [fn('COUNT', col('borrowing_id')), 'count'],
+      [fn('COUNT', col('returned_at')), 'count'],
     ],
     where: {
       returned_at: { [Op.gte]: sixMonthsAgo, [Op.ne]: null },
@@ -84,7 +84,13 @@ const getDashboard = asyncHandler(async (req: Request, res: Response): Promise<v
   const popularBooks = await Borrowing.findAll({
     attributes: ['book_id', [fn('COUNT', col('borrowing_id')), 'borrow_count']],
     include: [{ association: 'book', attributes: ['book_id', 'book_title', 'author_name', 'cover_image_url'] }],
-    group: ['Borrowing.book_id', 'book.book_id'],
+    group: [
+      'Borrowing.book_id',
+      'book.book_id',
+      'book.book_title',
+      'book.author_name',
+      'book.cover_image_url'
+    ],
     order: [[literal('borrow_count'), 'DESC']],
     limit: 5,
     raw: false,

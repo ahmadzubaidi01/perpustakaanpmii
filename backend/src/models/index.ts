@@ -1,6 +1,6 @@
 import sequelize from '../config/database';
 
-// Import all models
+// Import all models in logical dependency order
 import Faculty from './Faculty';
 import StudyProgram from './StudyProgram';
 import BookCategory from './BookCategory';

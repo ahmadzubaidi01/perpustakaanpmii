@@ -6,7 +6,7 @@ const router = Router();
 
 // Serve the Realtime Dashboard
 router.get('/', (req: Request, res: Response) => {
-  res.sendFile(path.resolve(__dirname, '../public/logs.html'));
+  res.sendFile(path.resolve(__dirname, '../../public/logs.html'));
 });
 
 // SSE Stream Endpoint

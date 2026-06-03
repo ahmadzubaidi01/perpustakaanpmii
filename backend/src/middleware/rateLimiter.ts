@@ -5,7 +5,6 @@ import { Request, Response } from 'express';
 
 /**
  * Rate limiting middleware.
- * Distributed rate limiting supports Redis-backed storage when available.
  * Rate-limited requests return standardized API responses.
  */
 

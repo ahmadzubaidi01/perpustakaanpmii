@@ -3,7 +3,7 @@ import DailyRotateFile from 'winston-daily-rotate-file';
 import path from 'path';
 import env from '../config/environment';
 
-const logDir = path.resolve(__dirname, '..', env.LOG_DIR);
+const logDir = path.resolve(__dirname, '..', '..', env.LOG_DIR);
 
 /**
  * Custom format that redacts sensitive credentials from logs.

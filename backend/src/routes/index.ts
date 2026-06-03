@@ -1,8 +1,6 @@
 import { Router, Request, Response } from 'express';
 import v1Routes from './v1';
-import { isRedisHealthy } from '../config/redis';
 import sequelize from '../config/database';
-import env from '../config/environment';
 import { deviceTracker } from '../middleware/deviceTracker';
 
 const router = Router();
@@ -22,19 +20,7 @@ router.get('/health', async (_req: Request, res: Response) => {
     checks.database = 'unhealthy';
   }
 
-  // Redis health check
-  try {
-    if (!env.REDIS_ENABLED) {
-      checks.redis = 'disabled';
-    } else {
-      const redisHealthy = await isRedisHealthy();
-      checks.redis = redisHealthy ? 'healthy' : 'unhealthy';
-    }
-  } catch {
-    checks.redis = 'unavailable';
-  }
-
-  const allHealthy = Object.values(checks).every((v) => v === 'healthy' || v === 'unavailable' || v === 'disabled');
+  const allHealthy = Object.values(checks).every((v) => v === 'healthy');
   const statusCode = allHealthy ? 200 : 503;
 
   res.status(statusCode).json({

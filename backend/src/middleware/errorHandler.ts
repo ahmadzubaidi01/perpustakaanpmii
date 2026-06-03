@@ -118,16 +118,6 @@ const errorHandler = (err: any, req: Request, res: Response, _next: NextFunction
     message = 'Unexpected file field';
   }
 
-  // Joi Validation Error
-  if (err.isJoi) {
-    statusCode = 422;
-    message = 'Validation failed';
-    errorDetails = err.details?.map((d: any) => ({
-      field: d.path?.join('.'),
-      message: d.message,
-    }));
-  }
-
   // Operational error (AppError)
   if (err instanceof AppError) {
     errorDetails = err.details;

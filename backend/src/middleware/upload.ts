@@ -1,4 +1,4 @@
- import multer from 'multer';
+import multer from 'multer';
 import path from 'path';
 import crypto from 'crypto';
 import { Request } from 'express';
@@ -16,7 +16,7 @@ import { logStream } from '../services/logStream';
 
 const storage = multer.diskStorage({
   destination: (_req: Request, _file: Express.Multer.File, cb: (error: Error | null, destination: string) => void) => {
-    const uploadDir = path.resolve(__dirname, '..', env.UPLOAD_DIR);
+    const uploadDir = path.resolve(__dirname, '..', '..', env.UPLOAD_DIR);
     cb(null, uploadDir);
   },
   filename: (_req: Request, file: Express.Multer.File, cb: (error: Error | null, filename: string) => void) => {
@@ -25,7 +25,7 @@ const storage = multer.diskStorage({
     const timestamp = Date.now();
     const ext = path.extname(file.originalname).toLowerCase();
 
-    // Prevent executable extensions
+    // Prevent dangerous/executable extensions
     const dangerousExtensions = ['.exe', '.bat', '.cmd', '.sh', '.ps1', '.msi', '.com', '.vbs', '.js', '.php', '.py', '.rb'];
     if (dangerousExtensions.includes(ext)) {
       logStream.emitLog({

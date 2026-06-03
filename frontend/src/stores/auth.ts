@@ -108,33 +108,12 @@ export const useAuthStore = defineStore('auth', {
     },
 
     async logout() {
-  this.loading = true;
+  this.user = null;
 
-  try {
-    const refreshToken = Cookies.get('refreshToken');
+  Cookies.remove('accessToken');
+  Cookies.remove('refreshToken');
 
-    console.log('Refresh Token:', refreshToken);
-
-    const res = await api.post('/v1/auth/logout', {
-      refresh_token: refreshToken,
-    });
-
-    console.log('LOGOUT RESPONSE:', res.data);
-  } catch (err: any) {
-    console.error('LOGOUT ERROR:', err.response?.data || err);
-  } finally {
-    this.user = null;
-
-    Cookies.remove('accessToken');
-    Cookies.remove('refreshToken');
-
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
-
-    this.loading = false;
-
-    window.location.href = '/login';
-  }
-    },
+  window.location.href = '/login';
+          },
   },
 });

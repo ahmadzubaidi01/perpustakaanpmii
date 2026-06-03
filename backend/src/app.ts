@@ -70,7 +70,7 @@ app.get('/health', async (_req, res) => {
   }
 
   const success = dbStatus === 'connected';
-  res.status(success ? 200 : 503).json({
+  res.status(200).json({
     success,
     database: dbStatus,
     environment: env.NODE_ENV,

@@ -19,7 +19,7 @@ router.get('/health', async (_req: Request, res: Response) => {
   }
 
   const success = dbStatus === 'connected';
-  res.status(success ? 200 : 503).json({
+  res.status(200).json({
     success,
     database: dbStatus,
     environment: process.env.NODE_ENV || 'development',

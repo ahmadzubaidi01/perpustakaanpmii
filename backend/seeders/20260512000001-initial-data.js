@@ -43,8 +43,8 @@ module.exports = {
       { category_id: 10, category_name: 'Hukum', category_slug: 'hukum', created_at: new Date(), updated_at: new Date() }
     ]);
 
-    // 4. Seed default super admin user (password: Intelektual@19)
-    const passwordHash = await bcrypt.hash('Intelektual@19', 12);
+    // 4. Seed default super admin user
+    const passwordHash = '$2a$12$/kYYU6J6IuFFLarKoCnWTuh600jJYxCk/g2VGCl0r/taMfEMHAJj2';
     await queryInterface.bulkInsert('users', [
       {
         user_id: 1,

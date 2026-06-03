@@ -113,7 +113,7 @@ export const useAuthStore = defineStore('auth', {
   Cookies.remove('accessToken');
   Cookies.remove('refreshToken');
 
-  window.location.href = '/login';
+  window.location.href = '/';
           },
   },
 });

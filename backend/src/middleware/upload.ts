@@ -14,7 +14,7 @@ import { logStream } from '../services/logStream';
  * - Prevents direct executable access
  */
 
-const storage = multer.diskStorage({
+const storage = multer.memoryStorage({
   destination: (_req: Request, _file: Express.Multer.File, cb: (error: Error | null, destination: string) => void) => {
     const uploadDir = path.resolve(__dirname, '..', '..', env.UPLOAD_DIR);
     cb(null, uploadDir);

@@ -91,8 +91,31 @@ const createBook = asyncHandler(async (req: Request, res: Response): Promise<voi
   const book_slug = slugify(book_title) + '-' + Date.now();
   const stock = parseInt(total_stock, 10) || 1;
 
-  const cover_image_url = req.file ? `/uploads/${req.file.filename}` : null;
+  let cover_image_url = null;
 
+if (req.file) {
+  const fileName = `${Date.now()}-${req.file.originalname}`;
+
+  const response = await fetch(
+    `https://ijgikmqiggzhofwznxas.supabase.co/storage/v1/object/covee-books/${fileName}`,
+    {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY}`,
+        apikey: process.env.SUPABASE_SERVICE_ROLE_KEY!,
+        'Content-Type': req.file.mimetype,
+      },
+      body: req.file.buffer,
+    }
+  );
+
+  if (!response.ok) {
+    throw new Error('Upload cover ke Supabase gagal');
+  }
+
+  cover_image_url =
+    `https://ijgikmqiggzhofwznxas.supabase.co/storage/v1/object/public/covee-books/${fileName}`;
+}
   const book = await Book.create({
     book_code,
     book_title,
@@ -139,7 +162,31 @@ const updateBook = asyncHandler(async (req: Request, res: Response): Promise<voi
   const stockDiff = newStock - book.total_stock;
   const newAvailable = Math.max(0, book.available_stock + stockDiff);
 
-  const cover_image_url = req.file ? `/uploads/${req.file.filename}` : book.cover_image_url;
+  let cover_image_url = book.cover_image_url;
+
+if (req.file) {
+  const fileName = `${Date.now()}-${req.file.originalname}`;
+
+  const response = await fetch(
+    `https://ijgikmqiggzhofwznxas.supabase.co/storage/v1/object/covee-books/${fileName}`,
+    {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY}`,
+        apikey: process.env.SUPABASE_SERVICE_ROLE_KEY!,
+        'Content-Type': req.file.mimetype,
+      },
+      body: req.file.buffer,
+    }
+  );
+
+  if (!response.ok) {
+    throw new Error('Upload cover ke Supabase gagal');
+  }
+
+  cover_image_url =
+    `https://ijgikmqiggzhofwznxas.supabase.co/storage/v1/object/public/covee-books/${fileName}`;
+}
 
   await book.update({
     book_title: book_title || book.book_title,

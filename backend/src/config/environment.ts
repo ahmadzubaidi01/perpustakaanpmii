@@ -82,18 +82,25 @@ const env = {
   LOG_LEVEL: process.env.LOG_LEVEL || 'debug',
 };
 
-// Validate critical environment variables in production
+// Validate critical environment variables
+const requiredDbVars = ['DB_HOST', 'DB_PORT', 'DB_NAME', 'DB_USER'];
+const missingDb = requiredDbVars.filter((key) => !process.env[key]);
+if (missingDb.length > 0) {
+  throw new Error(`Database connection configuration is incomplete. Missing required environment variable(s): ${missingDb.join(', ')}`);
+}
+
 if (env.NODE_ENV === 'production') {
-  const requiredVars = [
+  const requiredProductionVars = [
     'JWT_ACCESS_SECRET',
     'JWT_REFRESH_SECRET',
+    'DB_PASSWORD',
   ];
 
-  const missing = requiredVars.filter((key) => {
-    return !env[key as keyof typeof env];
+  const missingProd = requiredProductionVars.filter((key) => {
+    return !process.env[key];
   });
-  if (missing.length > 0) {
-    throw new Error(`Missing required environment variables: ${missing.join(', ')}`);
+  if (missingProd.length > 0) {
+    throw new Error(`Missing required production environment variables: ${missingProd.join(', ')}`);
   }
 }
 

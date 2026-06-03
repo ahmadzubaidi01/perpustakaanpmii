@@ -7,6 +7,7 @@ import path from 'path';
 import fs from 'fs';
 import env from './config/environment';
 import apiRoutes from './routes/index';
+import sequelize from './config/database';
 import { errorHandler, notFoundHandler } from './middleware/errorHandler';
 import { realtimeLogger } from './middleware/logger';
 import { trackRequestMiddleware } from './middleware/requestTracker';
@@ -59,13 +60,20 @@ app.use('/uploads', express.static(upload_path, {
 app.use('/api', apiRoutes);
 
 // Root health check
-app.get('/health', (_req, res) => {
-  res.status(200).json({
-    success: true,
-    message: `${env.APP_NAME} API is running`,
-    data: { environment: env.NODE_ENV, timestamp: new Date().toISOString() },
-    error: null,
-    metadata: null,
+app.get('/health', async (_req, res) => {
+  let dbStatus = 'disconnected';
+  try {
+    await sequelize.authenticate();
+    dbStatus = 'connected';
+  } catch (err) {
+    dbStatus = 'disconnected';
+  }
+
+  const success = dbStatus === 'connected';
+  res.status(success ? 200 : 503).json({
+    success,
+    database: dbStatus,
+    environment: env.NODE_ENV,
   });
 });
 

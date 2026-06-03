@@ -3,6 +3,9 @@
   "private": true,
   "version": "0.0.0",
   "type": "module",
+  "engines": {
+    "node": ">=24.0.0"
+  },
   "scripts": {
     "dev": "vite",
     "build": "vue-tsc -b && vite build",
@@ -10,6 +13,7 @@
   },
   "dependencies": {
     "@lucide/vue": "^1.17.0",
+    "@supabase/supabase-js": "^2.107.0",
     "axios": "^1.16.1",
     "html5-qrcode": "^2.3.8",
     "js-cookie": "^3.0.8",

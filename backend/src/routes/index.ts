@@ -10,25 +10,19 @@ router.use(deviceTracker);
 
 // Health check endpoints
 router.get('/health', async (_req: Request, res: Response) => {
-  const checks: Record<string, string> = { api: 'healthy' };
-
-  // Database health check
+  let dbStatus = 'disconnected';
   try {
     await sequelize.authenticate();
-    checks.database = 'healthy';
-  } catch {
-    checks.database = 'unhealthy';
+    dbStatus = 'connected';
+  } catch (err) {
+    dbStatus = 'disconnected';
   }
 
-  const allHealthy = Object.values(checks).every((v) => v === 'healthy');
-  const statusCode = allHealthy ? 200 : 503;
-
-  res.status(statusCode).json({
-    success: allHealthy,
-    message: allHealthy ? 'All systems operational' : 'Some systems are unhealthy',
-    data: checks,
-    error: null,
-    metadata: { timestamp: new Date().toISOString() },
+  const success = dbStatus === 'connected';
+  res.status(success ? 200 : 503).json({
+    success,
+    database: dbStatus,
+    environment: process.env.NODE_ENV || 'development',
   });
 });
 

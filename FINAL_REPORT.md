@@ -1,119 +1,74 @@
-# FINAL REPORT: Backend Refactoring & Optimization
+# FINAL REPORT: Backend Refactoring & Vercel Production Deployment Compatibility
 
-This report details the structural refactoring, bug fixes, package cleanup, and deployment configurations applied to the backend application to transform it into a clean, production-ready Express.js, Sequelize, and MySQL system.
-
----
-
-## 1. Executive Summary & Core Objective
-The backend codebase was refactored from a cluttered, error-prone structure containing unused caching, queue, and WebSocket layers into a streamlined API. The system now strictly runs on:
-*   **Express.js** (Web application framework)
-*   **Sequelize ORM** (Database access and schema associations)
-*   **MySQL** (Relational storage)
-
-All unused background processes, socket servers, and cron jobs have been completely stripped out to ensure maximum compatibility with **cPanel CloudLinux Passenger**, which expects a stateless request-response entrypoint.
+This report documents the architectural refactoring, bug fixes, package optimization, and serverless compatibility updates applied to the backend application to prepare it for seamless production execution under Express, Sequelize, MySQL, and Vercel Serverless.
 
 ---
 
-## 2. Findings & Root Cause Analysis
+## 1. Removed Dependencies & Filesystem Components
+To guarantee zero-write filesystem operations and serverless compatibility, the following changes were implemented:
 
-During analysis of the original production crashes (HTTP 500) and log auditing, two primary issues were isolated and resolved:
+### A. Removed Packages (from `package.json`)
+*   **Logging Transports**: Removed `winston-daily-rotate-file` and verified `file-stream-rotator` is absent from dependencies.
+*   **Stateful Cache & Queues**: Removed `redis`, `ioredis`, `bullmq`, `rate-limit-redis`, and `@socket.io/redis-adapter`.
+*   **WebSockets & Cron Jobs**: Removed `socket.io` and `node-cron`.
+*   **Unused Libraries**: Stripped out `pdfkit`, `exceljs`, `qrcode`, `file-type`, `firebase-admin`, `joi`, `swagger-ui-express`, `swagger-jsdoc`.
 
-### A. Sequelize Association Failure
-*   **Symptom**: Application crash at startup with error `BookCategory.belongsTo called with something that's not a subclass of Sequelize.Model`.
-*   **Root Cause**: The models were loaded dynamically or out-of-order in the original models loader. If an association was invoked on a model before its target model was initialized, Sequelize threw a fatal error.
-*   **Fix**: Standardized model loading order in [models/index.ts](file:///c:/Users/evane/OneDrive/Dokumen/Punya%20Ahmad/Buku_PMII/perpustakaandigital/backend/src/models/index.ts). The database and all model schemas are fully initialized, and association hooks are executed in a deterministic order.
-
-### B. MySQL `ONLY_FULL_GROUP_BY` SQL Error
-*   **Symptom**: Dashboard queries crash under production MySQL servers where `ONLY_FULL_GROUP_BY` SQL mode is active.
-*   **Root Cause**: In [dashboardController.ts](file:///c:/Users/evane/OneDrive/Dokumen/Punya%20Ahmad/Buku_PMII/perpustakaandigital/backend/src/controllers/dashboardController.ts), queries aggregating borrowing stats used `GROUP BY` only on ID fields (`Borrowing.book_id`, `book.book_id`) while selecting non-aggregated columns (`book.book_title`, `book.author_name`, `book.cover_image_url`).
-*   **Fix**: Updated the `group` array of the Sequelize query to include all non-aggregated select fields (`book.book_title`, `book.author_name`, `book.cover_image_url`), complying with MySQL SQL standards.
-
----
-
-## 3. Structural Refactoring Details
-
-The codebase has been restructured into a standard `src/` directory layout. Obsolete files at the root of `backend/` have been removed.
-
-### Migrated Layout Mapping
-| Old File / Directory | New Path in `src/` | Purpose |
-| :--- | :--- | :--- |
-| `config/` | `src/config/` | Core environment configurations (excluding Redis) |
-| `controllers/` | `src/controllers/` | API controllers (with Group By fixes applied) |
-| `middleware/` | `src/middleware/` | Auth, rate limiting (refactored to memory), error handling |
-| `models/` | `src/models/` | Sequelize database models and index loader |
-| `routes/` | `src/routes/` | API routes (Redis health check removed) |
-| `services/` | `src/services/` | Internal service classes (clean from WebSocket integrations) |
-| `utils/` | `src/utils/` | Helpers, logger, and formatting utils |
-| `setup_database.ts` | `src/setup_database.ts` | Database tables setup and seeding script |
-| `index.ts` | `src/app.ts` & `src/index.ts` | Restructured app boot and server entry point |
-
-### Entrypoint Separation
-*   [src/app.ts](file:///c:/Users/evane/OneDrive/Dokumen/Punya%20Ahmad/Buku_PMII/perpustakaandigital/backend/src/app.ts): Exports the Express instance, mounts CORS, security headers, compression, static uploads directory, and routes.
-*   [src/index.ts](file:///c:/Users/evane/OneDrive/Dokumen/Punya%20Ahmad/Buku_PMII/perpustakaandigital/backend/src/index.ts): Loads `.env`, handles uncaught errors, runs database connection validation with retries, and initializes the HTTP listener.
+### B. Cleaned Environment Variables
+*   Removed `LOG_DIR`, `LOG_MAX_SIZE`, and `LOG_MAX_FILES` from [.env.example](file:///c:/Users/evane/OneDrive/Dokumen/Punya%20Ahmad/Buku_PMII/perpustakaandigital/backend/.env.example) and [.env](file:///c:/Users/evane/OneDrive/Dokumen/Punya%20Ahmad/Buku_PMII/perpustakaandigital/backend/.env).
+*   Deleted the `logs/` directory from the backend workspace.
 
 ---
 
-## 4. Removed Components & Dependencies
+## 2. Fixed Sequelize Associations & Initialization Order
+To resolve the startup crash `BookCategory.belongsTo called with something that's not a subclass of Sequelize.Model`, we audited the Sequelize connection and registration process:
 
-The following packages and their associated configurations were removed from `package.json` to decrease runtime complexity:
+### A. Audited Models and Registration
+*   **BookCategory**: Exists as [BookCategory.ts](file:///c:/Users/evane/OneDrive/Dokumen/Punya%20Ahmad/Buku_PMII/perpustakaandigital/backend/src/models/BookCategory.ts) and represents category metadata. It implements a static `associate(models)` function mapping a `hasMany` relation to `models.Book`.
+*   **Book**: Exists as [Book.ts](file:///c:/Users/evane/OneDrive/Dokumen/Punya%20Ahmad/Buku_PMII/perpustakaandigital/backend/src/models/Book.ts) and maps its `category_id` using a `belongsTo` relation to `models.BookCategory`.
+*   **Resolution**: Audited all 13 active model entities and verified there are no references to any obsolete or missing models (e.g. `Category`). Every model and controller correctly imports and binds to `BookCategory`.
 
-1.  **Redis Cache & Workers**: `redis`, `ioredis`, `bullmq`, `rate-limit-redis`, `@socket.io/redis-adapter`
-2.  **WebSockets**: `socket.io` and socket middleware
-3.  **Cron Jobs**: `node-cron` (and the `jobs/` directory)
-4.  **Unused Libraries**: `pdfkit`, `exceljs`, `qrcode`, `file-type`, `firebase-admin`, `joi`, `swagger-ui-express`, `swagger-jsdoc`
-
-*Result*: Shrinked the `node_modules` size, removing **595 packages** on clean installation.
-
----
-
-## 5. Deployment Instructions for cPanel Passenger
-
-When hosting on a cPanel environment using CloudLinux Passenger:
-
-### A. Environment Configuration
-Create a `.env` file at the backend root matching the sanitized parameters in [.env.example](file:///c:/Users/evane/OneDrive/Dokumen/Punya%20Ahmad/Buku_PMII/perpustakaandigital/backend/.env.example):
-```ini
-NODE_ENV=production
-PORT=5000
-DB_HOST=127.0.0.1
-DB_PORT=3306
-DB_NAME=your_database_name
-DB_USER=your_database_user
-DB_PASSWORD=your_database_password
-JWT_ACCESS_SECRET=your_jwt_access_secret
-JWT_REFRESH_SECRET=your_jwt_refresh_secret
-UPLOAD_DIR=uploads
-LOG_DIR=logs
-```
-
-### B. Build Step
-Before uploading or starting Passenger, build the project to compile TypeScript:
-```bash
-npm run build
-```
-This generates the compiled JavaScript output in the `dist/` directory.
-
-### C. cPanel Node.js Application Settings
-In cPanel under "Setup Node.js App":
-1.  **Node.js Version**: Select `18.x` or higher.
-2.  **Application Mode**: Set to `Production`.
-3.  **Application Root**: Set to the path of your backend folder (e.g. `public_html/backend`).
-4.  **Application Startup File**: Set to `dist/index.js`.
-5.  **Environment Variables**: Ensure `NODE_ENV=production` is set in the cPanel environment settings.
-6.  Click **Run JS Install** if needed, then **Restart**.
-
-### D. Initializing/Seeding the Database
-To create tables and seed default data (such as default Super Admin and faculties) in production, you can run:
-```bash
-node dist/setup_database.js
-```
-*Note*: This script drops existing tables and seeds defaults. Do not run it on a production database that already contains user data.
+### B. Explicit Association Lifecycle
+To ensure that every model class is loaded and registered in the Sequelize engine before any associations (`belongsTo`, `hasMany`, `belongsToMany`) are declared, we established a strict initialization lifecycle in [models/index.ts](file:///c:/Users/evane/OneDrive/Dokumen/Punya%20Ahmad/Buku_PMII/perpustakaandigital/backend/src/models/index.ts):
+1.  **Imports**: All model classes are imported in order.
+2.  **Instantiation**: During import, the code executes each model's `.init()` method, utilizing the shared `sequelize` instance imported from [config/database.ts](file:///c:/Users/evane/OneDrive/Dokumen/Punya%20Ahmad/Buku_PMII/perpustakaandigital/backend/src/config/database.ts).
+3.  **Registration**: All initialized model classes are grouped into a key-value object `models`.
+4.  **Wiring Associations**: The system loops over the `models` object and fires `associate(models)` on each model class. This ensures all target classes are fully registered and avoids any `undefined` model reference during association compilation.
 
 ---
 
-## 6. Verification Status
+## 3. Vercel Serverless Compatibility Changes
+Serverless functions expect stateless, short-lived executions with a read-only local filesystem.
 
-*   **Compilation check**: Executed `npm run build`. Compiles clean with **0 errors**.
-*   **Dependency check**: Successful execution of `npm install` with updated dependencies.
-*   **Pathing verification**: Relative pathing for local logs and static uploads folders successfully maps to the backend root directory.
-*   **Health endpoint**: The `/health` endpoint checks database connection status and returns HTTP 200 operational state.
+### A. Console-Only Logging
+*   Refactored the logger in [src/utils/logger.ts](file:///c:/Users/evane/OneDrive/Dokumen/Punya%20Ahmad/Buku_PMII/perpustakaandigital/backend/src/utils/logger.ts) to write exclusively to `winston.transports.Console`.
+*   **JSON Logging in Production**: When `process.env.VERCEL` exists or `NODE_ENV=production` is set, Winston formats output logs as standard single-line JSON, ensuring cloud telemetry engines (like Vercel Logs, AWS CloudWatch, Datadog) can parse log levels and error stack traces natively.
+*   **Styled Logging in Development**: Colorized and formatted multiline console logging is preserved for local development ease.
+
+### B. Zero-Write Disk Operations
+*   Removed all folder creation logic (`fs.mkdirSync`) from startup scripts in [src/index.ts](file:///c:/Users/evane/OneDrive/Dokumen/Punya%20Ahmad/Buku_PMII/perpustakaandigital/backend/src/index.ts) and [src/app.ts](file:///c:/Users/evane/OneDrive/Dokumen/Punya%20Ahmad/Buku_PMII/perpustakaandigital/backend/src/app.ts).
+*   Configured the static file server (`express.static`) in [src/app.ts](file:///c:/Users/evane/OneDrive/Dokumen/Punya%20Ahmad/Buku_PMII/perpustakaandigital/backend/src/app.ts) to serve uploads from the pre-existing directory path without dynamically creating it at runtime, preventing read-only file system errors (`EROFS`).
+
+### C. Stateless Configurations
+*   Removed WAMP/XAMPP, PM2, or local `localhost` network port dependencies.
+*   Ensured all external configuration details (Database Host, Database Credentials, JWT Secrets, SMTP Config, CORS Origins, and App URLs) are read dynamically from standard environment variables, replacing any hardcoded assumptions.
+
+---
+
+## 4. Startup Verification Checklist
+To confirm backend health and readiness before deploying to Vercel, execute the following validation checklist:
+
+1.  **Dependencies Cleanliness**:
+    *   *Action*: Run `npm install` in the backend root directory.
+    *   *Expected Result*: Installs packages smoothly, removing daily rotate file libraries, resulting in 297 audited dependencies.
+2.  **TypeScript Compilation**:
+    *   *Action*: Run `npm run build`.
+    *   *Expected Result*: Compiles with 0 TypeScript compilation errors, writing clean output directly to the `dist/` directory.
+3.  **Database Seeding**:
+    *   *Action*: Run `node dist/setup_database.js` against your target database.
+    *   *Expected Result*: Successfully initializes schema tables, registers constraints, and seeds default Super Admin, faculties, study programs, and book categories.
+4.  **Vercel Local Simulation Boot**:
+    *   *Action*: Execute `$env:VERCEL="1"; node dist/index.js` (PowerShell) or `VERCEL=1 node dist/index.js` (Bash).
+    *   *Expected Result*: The application boots successfully with no directory creation or filesystem write errors. Standard logs are formatted as JSON and printed directly to the console.
+5.  **Health Check Endpoint**:
+    *   *Action*: Fire a `GET /health` request to the running port (e.g. `http://localhost:5000/api/health`).
+    *   *Expected Result*: Returns status `HTTP 200` with database validation `healthy` and operational.

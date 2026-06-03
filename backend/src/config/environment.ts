@@ -80,9 +80,6 @@ const env = {
 
   // Logging
   LOG_LEVEL: process.env.LOG_LEVEL || 'debug',
-  LOG_DIR: process.env.LOG_DIR || 'logs',
-  LOG_MAX_SIZE: process.env.LOG_MAX_SIZE || '20m',
-  LOG_MAX_FILES: process.env.LOG_MAX_FILES || '14d',
 };
 
 // Validate critical environment variables in production

@@ -36,13 +36,6 @@ serverHealthMonitor.start(5000);
 // Start server
 const startServer = async () => {
   try {
-    // Startup check: Uploads folder permissions and directory existence validation
-    const uploadDir = path.resolve(__dirname, '..', env.UPLOAD_DIR);
-    if (!fs.existsSync(uploadDir)) {
-      fs.mkdirSync(uploadDir, { recursive: true });
-      logger.info('Created uploads storage directory');
-    }
-
     // Database connection with defensive auto-retry logic (5 times, 2s intervals)
     let dbRetries = 5;
     while (dbRetries > 0) {

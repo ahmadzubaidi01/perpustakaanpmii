@@ -41,8 +41,7 @@
     "sequelize": "^6.37.8",
     "sequelize-cli": "^6.6.2",
     "uuid": "^11.1.0",
-    "winston": "^3.17.0",
-    "winston-daily-rotate-file": "^5.0.0"
+    "winston": "^3.17.0"
   },
   "devDependencies": {
     "@types/bcryptjs": "^2.4.6",

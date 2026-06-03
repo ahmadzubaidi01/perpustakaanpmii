@@ -46,11 +46,6 @@ app.use(realtimeLogger);
 
 // Serve uploaded files (prevent direct executable access)
 const upload_path = path.resolve(__dirname, '..', env.UPLOAD_DIR);
-
-if (!fs.existsSync(upload_path)) {
-  fs.mkdirSync(upload_path, { recursive: true });
-}
-
 app.use('/uploads', express.static(upload_path, {
   dotfiles: 'deny',
   index: false,

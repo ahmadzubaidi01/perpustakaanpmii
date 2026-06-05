@@ -1,12 +1,12 @@
 <script setup lang="ts">
-import { ref, onMounted, watch } from 'vue';
+import { ref, onMounted, watch, computed } from 'vue';
 import api, { getImageUrl } from '../../../lib/api';
 import { useAuthStore } from '../../../stores/auth';
 
 const authStore = useAuthStore();
 import { 
   Users, Search, Clock, Shield, AlertTriangle, Edit2, 
-  Trash2, X, Check, ArrowRight, UserCheck
+  Trash2, X, Check, ArrowRight, UserCheck, Eye, EyeOff
 } from '@lucide/vue';
 
 const users = ref<any[]>([]);
@@ -51,30 +51,51 @@ const showEditModal = ref(false);
 const activeUser = ref<any>(null);
 const editRole = ref('');
 const editStatus = ref('');
+const editPassword = ref('');
+const showEditPassword = ref(false);
 const submitLoading = ref(false);
+
+const isEditPasswordInvalid = computed(() => {
+  if (!editPassword.value) return false;
+  const hasUppercase = /[A-Z]/.test(editPassword.value);
+  const hasNumber = /[0-9]/.test(editPassword.value);
+  const hasSpecial = /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(editPassword.value);
+  const isLengthValid = editPassword.value.length >= 8;
+  return !(hasUppercase && hasNumber && hasSpecial && isLengthValid);
+});
 
 const openEditModal = (u: any) => {
   activeUser.value = u;
   editRole.value = u.user_role;
   editStatus.value = u.account_status;
+  editPassword.value = '';
+  showEditPassword.value = false;
   showEditModal.value = true;
 };
 
 const handleUpdateUser = async () => {
   if (!activeUser.value) return;
+  if (editPassword.value && isEditPasswordInvalid.value) {
+    errorMsg.value = 'Password baru tidak memenuhi persyaratan (harus memakai huruf Besar, nomer, dan karakter khusus).';
+    return;
+  }
   submitLoading.value = true;
   errorMsg.value = '';
   successMsg.value = '';
   try {
-    await api.put(`/v1/users/${activeUser.value.user_id}`, {
+    const payload: any = {
       user_role: editRole.value,
       account_status: editStatus.value,
-    });
+    };
+    if (editPassword.value) {
+      payload.password = editPassword.value;
+    }
+    await api.put(`/v1/users/${activeUser.value.user_id}`, payload);
     successMsg.value = 'Data anggota berhasil diperbarui!';
     showEditModal.value = false;
     fetchBorrowers();
   } catch (err: any) {
-    errorMsg.value = err.message || 'Gagal memperbarui data';
+    errorMsg.value = err.response?.data?.message || err.message || 'Gagal memperbarui data';
   } finally {
     submitLoading.value = false;
   }
@@ -278,6 +299,37 @@ const getStatusBadge = (status: string) => {
               <option value="inactive">Inactive</option>
               <option value="suspended">Suspended</option>
             </select>
+          </div>
+
+          <div v-if="authStore.isSuperAdmin">
+            <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-2">Ubah Password (Opsional)</label>
+            <div class="relative">
+              <input 
+                v-model="editPassword" 
+                :type="showEditPassword ? 'text' : 'password'" 
+                placeholder="Masukkan password baru untuk reset" 
+                class="w-full pl-3 pr-12 py-2.5 rounded-xl border border-slate-200 dark:border-dark-border bg-slate-50 dark:bg-dark-bg text-sm text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-blue-500 transition-all text-xs"
+              />
+              <button 
+                type="button"
+                @click="showEditPassword = !showEditPassword"
+                class="absolute inset-y-0 right-0 pr-3.5 flex items-center text-slate-400 hover:text-slate-650 dark:hover:text-slate-350 cursor-pointer"
+              >
+                <Eye v-if="!showEditPassword" class="w-5 h-5" />
+                <EyeOff v-else class="w-5 h-5" />
+              </button>
+            </div>
+            <!-- Password Complexity Warning -->
+            <p 
+              :class="[
+                editPassword && isEditPasswordInvalid 
+                  ? 'text-rose-500 font-semibold dark:text-rose-450' 
+                  : 'text-slate-400 dark:text-slate-500', 
+                'text-[10px] mt-1.5 transition-colors duration-200'
+              ]"
+            >
+              Password harus memakai huruf Besar, nomer, dan karakter khusus (minimal 8 karakter).
+            </p>
           </div>
 
           <button 

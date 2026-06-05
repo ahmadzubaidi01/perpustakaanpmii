@@ -135,7 +135,7 @@ const maxMonthlyCount = computed(() => {
         </span>
         <h3 class="text-2xl font-black">Selamat Datang, {{ user?.full_name }}!</h3>
         <p class="text-brand-blue-100 text-sm max-w-xl">
-          Di Sistem Informasi Peminjaman PMII Pustaka Jalanan. Selamat membaca, belajar, dan berdiskusi!
+          Di Sistem Informasi Peminjaman Pustaka Jalanan. Selamat membaca, belajar, dan berdiskusi!
         </p>
       </div>
     </div>

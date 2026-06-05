@@ -125,7 +125,7 @@ const updateUser = asyncHandler(async (req: Request, res: Response): Promise<voi
   if (!user) { apiResponse.notFound(res, 'User tidak ditemukan'); return; }
 
   const oldValue = user.toJSON();
-  const { full_name, email_address, phone_number, nim, user_role, faculty_id, program_id, account_status } = req.body;
+  const { full_name, email_address, phone_number, nim, user_role, faculty_id, program_id, account_status, password } = req.body;
 
   // Check email uniqueness
   if (email_address && email_address !== user.email_address) {
@@ -141,12 +141,28 @@ const updateUser = asyncHandler(async (req: Request, res: Response): Promise<voi
 
   const profile_photo_url = req.file ? saveUploadedFile(req.file) : user.profile_photo_url;
 
+  // Super Admin password update handler
+  let password_hash = user.password_hash;
+  if (password) {
+    if (req.user!.user_role !== UserRole.SUPER_ADMIN) {
+      apiResponse.forbidden(res, 'Hanya Super Admin yang dapat mengubah password pengguna');
+      return;
+    }
+    const passwordCheck = validatePasswordComplexity(password);
+    if (!passwordCheck.valid) {
+      apiResponse.unprocessable(res, 'Password tidak memenuhi persyaratan', passwordCheck.errors);
+      return;
+    }
+    password_hash = await bcrypt.hash(password, env.BCRYPT_SALT_ROUNDS);
+  }
+
   await user.update({
     full_name: full_name || user.full_name,
     email_address: email_address || user.email_address,
     phone_number: phone_number !== undefined ? phone_number : user.phone_number,
     nim: nim !== undefined ? nim : user.nim,
     user_role: user_role || user.user_role,
+    password_hash,
     faculty_id: faculty_id !== undefined ? (faculty_id ? parseInt(faculty_id, 10) : null) : user.faculty_id,
     program_id: program_id !== undefined ? (program_id ? parseInt(program_id, 10) : null) : user.program_id,
     account_status: account_status || user.account_status,

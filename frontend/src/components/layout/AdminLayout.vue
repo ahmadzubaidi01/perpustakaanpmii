@@ -94,7 +94,7 @@ const currentRouteName = computed(() => {
   if (currentLink) return currentLink.name;
   if (route.path === '/dashboard/profile') return 'Profil Saya';
   if (route.path === '/dashboard/notifications') return 'Notifikasi';
-  return 'Perpustakaan Lintang Songo';
+  return 'Perpustakaan Pustaka Jalanan';
 });
 
 const initials = computed(() => {
@@ -128,10 +128,10 @@ const isLinkActive = (path: string) => {
     >
       <!-- Brand Logo -->
       <div class="h-16 flex items-center gap-3 px-6 border-b border-brand-blue-800">
-        <img src="/logo.png" class="w-9 h-9 object-contain" alt="Logo PMII Lintang Songo" />
+        <img src="/logo.png" class="w-9 h-9 object-contain" alt="Logo Pustaka Jalanan" />
         <div>
-          <h1 class="text-lg font-bold leading-none tracking-wide text-brand-gold-100">Buku PMII</h1>
-          <span class="text-[10px] text-brand-blue-300 font-semibold tracking-wider uppercase">Lintang Songo</span>
+          <h1 class="text-lg font-bold leading-none tracking-wide text-brand-gold-100">Buku</h1>
+          <span class="text-[10px] text-brand-blue-300 font-semibold tracking-wider uppercase">Pustaka Jalanan</span>
         </div>
       </div>
 
@@ -189,7 +189,7 @@ const isLinkActive = (path: string) => {
           </button>
           <!-- Current Page Title with Komisariat Logo -->
           <div class="flex items-center gap-1.5 sm:gap-2 min-w-0">
-            <img src="/logo.png" class="w-7 h-7 object-contain flex-shrink-0" alt="Logo Komisariat" />
+            <img src="/logo.png" class="w-7 h-7 object-contain flex-shrink-0" alt="Logo Pustaka Jalanan" />
             <h2 class="text-sm sm:text-base font-extrabold text-slate-800 dark:text-slate-100 tracking-wide truncate max-w-[100px] sm:max-w-none">{{ currentRouteName }}</h2>
           </div>
         </div>

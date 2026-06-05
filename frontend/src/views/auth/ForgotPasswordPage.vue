@@ -37,7 +37,7 @@ const handleForgotPassword = async () => {
       <!-- Header -->
       <div class="flex flex-col items-center mb-8">
         <div class="flex gap-4 mb-4">
-          <img src="/logo.png" class="w-16 h-16 object-contain filter drop-shadow-sm" alt="Logo PMII Lintang Songo" />
+          <img src="/logo.png" class="w-16 h-16 object-contain filter drop-shadow-sm" alt="Logo Pustaka Jalanan" />
           <img src="/logo_kopri.png" class="w-16 h-16 object-contain filter drop-shadow-sm" alt="Logo Kopri" />
         </div>
         <h1 class="text-2xl font-black text-slate-800 dark:text-slate-100">Lupa Password</h1>

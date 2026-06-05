@@ -8,7 +8,7 @@ const env = {
   // Application
   NODE_ENV: process.env.NODE_ENV || 'development',
   PORT: parseInt(process.env.PORT || '5000', 10),
-  APP_NAME: process.env.APP_NAME || 'Buku PMII',
+  APP_NAME: process.env.APP_NAME || 'Buku',
   APP_URL: process.env.APP_URL || 'http://localhost:5000',
   FRONTEND_URL: process.env.FRONTEND_URL || 'http://localhost:5173',
 
@@ -39,7 +39,7 @@ const env = {
   SMTP_SECURE: process.env.SMTP_SECURE === 'true',
   SMTP_USER: process.env.SMTP_USER || '',
   SMTP_PASSWORD: process.env.SMTP_PASSWORD || '',
-  SMTP_FROM_NAME: process.env.SMTP_FROM_NAME || 'Buku PMII Lintang Songo',
+  SMTP_FROM_NAME: process.env.SMTP_FROM_NAME || 'Buku Pustaka Jalanan',
   SMTP_FROM_EMAIL: process.env.SMTP_FROM_EMAIL || 'noreply@example.com',
 
   // File Upload

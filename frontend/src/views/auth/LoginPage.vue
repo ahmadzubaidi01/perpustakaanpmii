@@ -2,13 +2,14 @@
 import { ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { useAuthStore } from '../../stores/auth';
-import { Mail, Lock, Loader, BookOpen } from '@lucide/vue';
+import { Mail, Lock, Loader, BookOpen, Eye, EyeOff } from '@lucide/vue';
 
 const authStore = useAuthStore();
 const router = useRouter();
 
 const email = ref('');
 const password = ref('');
+const showPassword = ref(false);
 const errorMsg = ref('');
 const loading = ref(false);
 
@@ -44,8 +45,8 @@ const handleLogin = async () => {
           <img src="/logo.png" class="w-16 h-16 object-contain filter drop-shadow-sm" alt="Logo PMII Lintang Songo" />
           <img src="/logo_kopri.png" class="w-16 h-16 object-contain filter drop-shadow-sm" alt="Logo Kopri" />
         </div>
-        <h1 class="text-2xl font-black text-slate-800 dark:text-slate-100">Buku PMII Lintang Songo</h1>
-        <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">Sistem Perpustakaan Komisariat</p>
+        <h1 class="text-2xl font-black text-slate-800 dark:text-slate-100">Buku Pustaka Jalanan</h1>
+        <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">Sistem Peminjaman</p>
       </div>
 
       <!-- Error Alert -->
@@ -82,11 +83,19 @@ const handleLogin = async () => {
             </span>
             <input 
               v-model="password" 
-              type="password" 
+              :type="showPassword ? 'text' : 'password'" 
               placeholder="••••••••" 
               required
-              class="w-full pl-11 pr-4 py-3 rounded-xl border border-slate-200 dark:border-dark-border bg-slate-50 dark:bg-dark-bg text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-blue-500 transition-all text-sm"
+              class="w-full pl-11 pr-12 py-3 rounded-xl border border-slate-200 dark:border-dark-border bg-slate-50 dark:bg-dark-bg text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-blue-500 transition-all text-sm"
             />
+            <button 
+              type="button"
+              @click="showPassword = !showPassword"
+              class="absolute inset-y-0 right-0 pr-3.5 flex items-center text-slate-400 hover:text-slate-650 dark:hover:text-slate-350 cursor-pointer"
+            >
+              <Eye v-if="!showPassword" class="w-5 h-5" />
+              <EyeOff v-else class="w-5 h-5" />
+            </button>
           </div>
         </div>
 

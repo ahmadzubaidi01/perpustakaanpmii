@@ -120,6 +120,15 @@ const getRoleBadge = (role: string) => {
   }
 };
 
+const getRoleLabel = (role: string) => {
+  switch (role) {
+    case 'super_admin': return 'Super Admin';
+    case 'komisariat_admin': return 'Admin Pustaka Jalanan';
+    case 'borrower': return 'Anggota';
+    default: return role;
+  }
+};
+
 const getStatusBadge = (status: string) => {
   switch (status) {
     case 'active': return 'bg-emerald-50 text-emerald-700 border-emerald-100 dark:bg-emerald-950/20 dark:text-emerald-405';
@@ -201,7 +210,7 @@ const getStatusBadge = (status: string) => {
               </td>
               <td class="py-4 px-6">
                 <span :class="[getRoleBadge(u.user_role), 'px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider border']">
-                  {{ u.user_role.replace('_', ' ') }}
+                  {{ getRoleLabel(u.user_role) }}
                 </span>
               </td>
               <td class="py-4 px-6">
@@ -219,7 +228,7 @@ const getStatusBadge = (status: string) => {
                     <Edit2 class="w-4 h-4" />
                   </button>
                   <button 
-                    v-if="authStore.isSuperAdmin"
+                    v-if="authStore.isAdmin"
                     @click="openDeleteConfirm(u)"
                     class="p-2 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-600 dark:bg-rose-950/20 dark:hover:bg-rose-900/30 dark:text-rose-400 border border-rose-200 dark:border-rose-900/30 transition-colors cursor-pointer"
                     title="Hapus Anggota"
@@ -253,7 +262,7 @@ const getStatusBadge = (status: string) => {
               class="w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-dark-border bg-slate-50 dark:bg-dark-bg text-sm text-slate-900 dark:text-white"
             >
               <option value="borrower">Borrower (Anggota Biasa)</option>
-              <option value="komisariat_admin">Komisariat Admin</option>
+              <option value="komisariat_admin">Admin Pustaka Jalanan</option>
               <option value="super_admin" :disabled="!authStore.isSuperAdmin">Super Admin</option>
             </select>
           </div>

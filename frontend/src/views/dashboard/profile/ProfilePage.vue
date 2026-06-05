@@ -3,7 +3,7 @@ import { ref, computed, watch } from 'vue';
 import { useAuthStore } from '../../../stores/auth';
 import api, { getImageUrl } from '../../../lib/api';
 import { 
-  User, Lock, Clock, CheckCircle, AlertTriangle, Key, Mail, Phone
+  User, Lock, Clock, CheckCircle, AlertTriangle, Key, Mail, Phone, Eye, EyeOff
 } from '@lucide/vue';
 
 const authStore = useAuthStore();
@@ -13,6 +13,14 @@ const initials = computed(() => {
   if (!user.value?.full_name) return 'U';
   return user.value.full_name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase();
 });
+
+const getRoleLabel = (role?: string) => {
+  if (!role) return '';
+  if (role === 'super_admin') return 'Super Admin';
+  if (role === 'komisariat_admin') return 'Admin Pustaka Jalanan';
+  if (role === 'borrower') return 'Anggota';
+  return role.replace('_', ' ');
+};
 
 // Profile fields
 const fullName = ref('');
@@ -60,13 +68,30 @@ const currentPassword = ref('');
 const newPassword = ref('');
 const confirmPassword = ref('');
 
+const showCurrentPassword = ref(false);
+const showNewPassword = ref(false);
+const showConfirmPassword = ref(false);
+
 const passwordLoading = ref(false);
 const passwordError = ref('');
 const passwordSuccess = ref('');
 
+const isNewPasswordInvalid = computed(() => {
+  if (!newPassword.value) return false;
+  const hasUppercase = /[A-Z]/.test(newPassword.value);
+  const hasNumber = /[0-9]/.test(newPassword.value);
+  const hasSpecial = /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(newPassword.value);
+  const isLengthValid = newPassword.value.length >= 8;
+  return !(hasUppercase && hasNumber && hasSpecial && isLengthValid);
+});
+
 const handleChangePassword = async () => {
   if (!currentPassword.value || !newPassword.value || !confirmPassword.value) {
     passwordError.value = 'Semua field password wajib diisi';
+    return;
+  }
+  if (isNewPasswordInvalid.value) {
+    passwordError.value = 'Password baru tidak memenuhi persyaratan (harus memakai huruf Besar, nomer, dan karakter khusus).';
     return;
   }
   if (newPassword.value !== confirmPassword.value) {
@@ -108,7 +133,7 @@ const handleChangePassword = async () => {
         <h4 class="text-base font-bold text-slate-800 dark:text-white">{{ user?.full_name }}</h4>
         <span class="text-xs text-slate-500 font-medium font-mono block mt-0.5">{{ user?.nim || 'NIM tidak diisi' }}</span>
         <span class="px-2.5 py-0.5 mt-2.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-brand-blue-50 dark:bg-brand-blue-950/20 text-brand-blue-500 border border-brand-blue-100 dark:border-brand-blue-900/20">
-          {{ user?.user_role?.replace('_', ' ') }}
+          {{ getRoleLabel(user?.user_role) }}
         </span>
 
         <!-- Academic Info -->
@@ -190,17 +215,73 @@ const handleChangePassword = async () => {
 
         <div>
           <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-2">Password Saat Ini</label>
-          <input v-model="currentPassword" type="password" required class="w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-dark-border bg-slate-50 dark:bg-dark-bg text-sm text-slate-900 dark:text-white" />
+          <div class="relative">
+            <input 
+              v-model="currentPassword" 
+              :type="showCurrentPassword ? 'text' : 'password'" 
+              required 
+              class="w-full pl-3 pr-12 py-2.5 rounded-xl border border-slate-200 dark:border-dark-border bg-slate-50 dark:bg-dark-bg text-sm text-slate-900 dark:text-white" 
+            />
+            <button 
+              type="button"
+              @click="showCurrentPassword = !showCurrentPassword"
+              class="absolute inset-y-0 right-0 pr-3.5 flex items-center text-slate-400 hover:text-slate-650 dark:hover:text-slate-350 cursor-pointer"
+            >
+              <Eye v-if="!showCurrentPassword" class="w-5 h-5" />
+              <EyeOff v-else class="w-5 h-5" />
+            </button>
+          </div>
         </div>
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-2">Password Baru</label>
-            <input v-model="newPassword" type="password" required class="w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-dark-border bg-slate-50 dark:bg-dark-bg text-sm text-slate-900 dark:text-white" />
+            <div class="relative">
+              <input 
+                v-model="newPassword" 
+                :type="showNewPassword ? 'text' : 'password'" 
+                required 
+                class="w-full pl-3 pr-12 py-2.5 rounded-xl border border-slate-200 dark:border-dark-border bg-slate-50 dark:bg-dark-bg text-sm text-slate-900 dark:text-white" 
+              />
+              <button 
+                type="button"
+                @click="showNewPassword = !showNewPassword"
+                class="absolute inset-y-0 right-0 pr-3.5 flex items-center text-slate-400 hover:text-slate-650 dark:hover:text-slate-350 cursor-pointer"
+              >
+                <Eye v-if="!showNewPassword" class="w-5 h-5" />
+                <EyeOff v-else class="w-5 h-5" />
+              </button>
+            </div>
+            <!-- Password Complexity Warning -->
+            <p 
+              :class="[
+                newPassword && isNewPasswordInvalid 
+                  ? 'text-rose-500 font-semibold dark:text-rose-450' 
+                  : 'text-slate-400 dark:text-slate-500', 
+                'text-xs mt-1.5 transition-colors duration-200'
+              ]"
+            >
+              Password harus memakai huruf Besar, nomer, dan karakter khusus (minimal 8 karakter).
+            </p>
           </div>
           <div>
             <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-2">Konfirmasi Password Baru</label>
-            <input v-model="confirmPassword" type="password" required class="w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-dark-border bg-slate-50 dark:bg-dark-bg text-sm text-slate-900 dark:text-white" />
+            <div class="relative">
+              <input 
+                v-model="confirmPassword" 
+                :type="showConfirmPassword ? 'text' : 'password'" 
+                required 
+                class="w-full pl-3 pr-12 py-2.5 rounded-xl border border-slate-200 dark:border-dark-border bg-slate-50 dark:bg-dark-bg text-sm text-slate-900 dark:text-white" 
+              />
+              <button 
+                type="button"
+                @click="showConfirmPassword = !showConfirmPassword"
+                class="absolute inset-y-0 right-0 pr-3.5 flex items-center text-slate-400 hover:text-slate-650 dark:hover:text-slate-350 cursor-pointer"
+              >
+                <Eye v-if="!showConfirmPassword" class="w-5 h-5" />
+                <EyeOff v-else class="w-5 h-5" />
+              </button>
+            </div>
           </div>
         </div>
 

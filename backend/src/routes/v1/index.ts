@@ -93,7 +93,7 @@ router.get('/users', authenticate, requireMinRole(UserRole.KOMISARIAT_ADMIN), li
 router.get('/users/:user_id', authenticate, getUser);
 router.post('/users', authenticate, requireMinRole(UserRole.KOMISARIAT_ADMIN), uploadSingle('profile_photo'), createUser);
 router.put('/users/:user_id', authenticate, requireMinRole(UserRole.KOMISARIAT_ADMIN), uploadSingle('profile_photo'), updateUser);
-router.delete('/users/:user_id', authenticate, requireRole(UserRole.SUPER_ADMIN), deleteUser);
+router.delete('/users/:user_id', authenticate, requireMinRole(UserRole.KOMISARIAT_ADMIN), deleteUser);
 
 // Profile (self)
 router.put('/users/profile', authenticate, uploadSingle('profile_photo'), updateProfile);

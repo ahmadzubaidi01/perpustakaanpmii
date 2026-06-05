@@ -1,8 +1,8 @@
 {
-  "cleanUrls": true,
+  "cleanUrls": false,
   "rewrites": [
     {
-      "source": "/:path*",
+      "source": "/(.*)",
       "destination": "/index.html"
     }
   ]

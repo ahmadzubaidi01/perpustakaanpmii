@@ -301,8 +301,8 @@ const forgotPassword = asyncHandler(async (req: Request, res: Response): Promise
   const resetUrl = `${env.FRONTEND_URL}/reset-password?token=${resetToken}`;
   await sendEmailNotification(
     email_address,
-    'Reset Password — Buku PMII Lintang Songo',
-    `<h2>Reset Password</h2><p>Klik <a href="${resetUrl}">di sini</a> untuk mereset password Anda. Link berlaku selama ${env.RESET_TOKEN_EXPIRY_MINUTES} menit.</p><p>— Buku PMII Lintang Songo</p>`
+    'Reset Password — Buku Pustaka Jalanan',
+    `<h2>Reset Password</h2><p>Klik <a href="${resetUrl}">di sini</a> untuk mereset password Anda. Link berlaku selama ${env.RESET_TOKEN_EXPIRY_MINUTES} menit.</p><p>— Buku Pustaka Jalanan</p>`
   );
 
   await createAuditLog(buildAuditFromRequest(req, AuditActionType.PASSWORD_RESET, TABLE_NAMES.USERS, user.user_id));

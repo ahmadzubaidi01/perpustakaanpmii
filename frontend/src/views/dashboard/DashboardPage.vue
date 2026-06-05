@@ -14,6 +14,14 @@ const user = computed(() => authStore.user);
 const router = useRouter();
 const catalogSearch = ref('');
 
+const getRoleLabel = (role?: string) => {
+  if (!role) return '';
+  if (role === 'super_admin') return 'Super Admin';
+  if (role === 'komisariat_admin') return 'Admin Pustaka Jalanan';
+  if (role === 'borrower') return 'Anggota';
+  return role.replace('_', ' ');
+};
+
 // Dashboard Real-time Catalog Autocomplete/Preview Search
 const searchResultBooks = ref<any[]>([]);
 const searchLoading = ref(false);
@@ -123,11 +131,11 @@ const maxMonthlyCount = computed(() => {
       
       <div class="relative z-10 space-y-2">
         <span class="px-3 py-1 rounded-full bg-brand-gold-500/20 text-brand-gold-100 text-xs font-bold uppercase tracking-wider">
-          {{ user?.user_role?.replace('_', ' ') }}
+          {{ getRoleLabel(user?.user_role) }}
         </span>
         <h3 class="text-2xl font-black">Selamat Datang, {{ user?.full_name }}!</h3>
         <p class="text-brand-blue-100 text-sm max-w-xl">
-          Di Sistem Informasi Perpustakaan Komisariat PMII Lintang Songo. Selamat membaca, belajar, dan berdiskusi!
+          Di Sistem Informasi Peminjaman PMII Pustaka Jalanan. Selamat membaca, belajar, dan berdiskusi!
         </p>
       </div>
     </div>

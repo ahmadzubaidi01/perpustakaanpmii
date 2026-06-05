@@ -80,6 +80,37 @@ const handleUpdateUser = async () => {
   }
 };
 
+const showDeleteConfirmModal = ref(false);
+const userToDelete = ref<any>(null);
+const deleteLoading = ref(false);
+
+const openDeleteConfirm = (u: any) => {
+  if (u.user_id === authStore.user?.user_id) {
+    errorMsg.value = 'Tidak bisa menghapus akun sendiri';
+    return;
+  }
+  userToDelete.value = u;
+  showDeleteConfirmModal.value = true;
+};
+
+const handleDeleteUser = async () => {
+  if (!userToDelete.value) return;
+  deleteLoading.value = true;
+  errorMsg.value = '';
+  successMsg.value = '';
+  try {
+    await api.delete(`/v1/users/${userToDelete.value.user_id}`);
+    successMsg.value = `Anggota "${userToDelete.value.full_name}" berhasil dihapus!`;
+    showDeleteConfirmModal.value = false;
+    fetchBorrowers();
+  } catch (err: any) {
+    errorMsg.value = err.response?.data?.message || err.message || 'Gagal menghapus anggota';
+  } finally {
+    deleteLoading.value = false;
+    userToDelete.value = null;
+  }
+};
+
 const getRoleBadge = (role: string) => {
   switch (role) {
     case 'super_admin': return 'bg-rose-50 text-rose-700 border-rose-100 dark:bg-rose-950/20 dark:text-rose-450 dark:border-rose-900/30';
@@ -179,12 +210,23 @@ const getStatusBadge = (status: string) => {
                 </span>
               </td>
               <td class="py-4 px-6 text-right">
-                <button 
-                  @click="openEditModal(u)"
-                  class="p-2 rounded-lg bg-slate-50 hover:bg-slate-100 text-slate-600 dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-slate-300 border border-slate-200 dark:border-dark-border transition-colors cursor-pointer"
-                >
-                  <Edit2 class="w-4 h-4" />
-                </button>
+                <div class="inline-flex items-center gap-2">
+                  <button 
+                    @click="openEditModal(u)"
+                    class="p-2 rounded-lg bg-slate-50 hover:bg-slate-100 text-slate-600 dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-slate-300 border border-slate-200 dark:border-dark-border transition-colors cursor-pointer"
+                    title="Ubah Akses Anggota"
+                  >
+                    <Edit2 class="w-4 h-4" />
+                  </button>
+                  <button 
+                    v-if="authStore.isSuperAdmin"
+                    @click="openDeleteConfirm(u)"
+                    class="p-2 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-600 dark:bg-rose-950/20 dark:hover:bg-rose-900/30 dark:text-rose-400 border border-rose-200 dark:border-rose-900/30 transition-colors cursor-pointer"
+                    title="Hapus Anggota"
+                  >
+                    <Trash2 class="w-4 h-4" />
+                  </button>
+                </div>
               </td>
             </tr>
           </tbody>
@@ -238,6 +280,43 @@ const getStatusBadge = (status: string) => {
             <span v-else>Simpan Perubahan</span>
           </button>
         </form>
+      </div>
+    </div>
+
+    <!-- MODAL: KONFIRMASI HAPUS ANGGOTA -->
+    <div v-if="showDeleteConfirmModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
+      <div class="bg-white dark:bg-dark-card border border-slate-200 dark:border-dark-border rounded-2xl w-full max-w-md overflow-hidden shadow-2xl p-6 relative">
+        <button @click="showDeleteConfirmModal = false" class="absolute top-4 right-4 p-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-500 transition-colors z-10">
+          <X class="w-5 h-5" />
+        </button>
+
+        <div class="flex items-center gap-3 text-rose-500 mb-4">
+          <AlertTriangle class="w-6 h-6 flex-shrink-0" />
+          <h3 class="text-lg font-black text-slate-800 dark:text-slate-100">Konfirmasi Hapus Anggota</h3>
+        </div>
+        
+        <p class="text-sm text-slate-650 dark:text-slate-300 mb-6">
+          Apakah Anda yakin ingin menghapus anggota <strong class="text-slate-800 dark:text-slate-100">{{ userToDelete?.full_name }}</strong>? Tindakan ini akan menonaktifkan/menghapus akun anggota tersebut.
+        </p>
+
+        <div class="flex items-center gap-3">
+          <button 
+            type="button"
+            @click="showDeleteConfirmModal = false"
+            class="flex-1 py-3 rounded-xl border border-slate-200 dark:border-dark-border hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold text-sm transition-colors cursor-pointer"
+          >
+            Batal
+          </button>
+          <button 
+            type="button"
+            @click="handleDeleteUser"
+            :disabled="deleteLoading"
+            class="flex-1 py-3 rounded-xl bg-rose-500 hover:bg-rose-600 text-white font-bold text-sm transition-colors flex items-center justify-center gap-2 cursor-pointer shadow-lg shadow-rose-500/10"
+          >
+            <Clock v-if="deleteLoading" class="w-5 h-5 animate-spin" />
+            <span v-else>Ya, Hapus</span>
+          </button>
+        </div>
       </div>
     </div>
   </div>

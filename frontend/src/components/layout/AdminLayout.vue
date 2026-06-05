@@ -101,6 +101,13 @@ const initials = computed(() => {
   if (!user.value?.full_name) return 'U';
   return user.value.full_name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase();
 });
+
+const isLinkActive = (path: string) => {
+  if (path === '/dashboard') {
+    return route.path === '/dashboard';
+  }
+  return route.path.startsWith(path);
+};
 </script>
 
 <template>
@@ -136,7 +143,7 @@ const initials = computed(() => {
           :to="item.path"
           @click="closeSidebar"
           :class="[
-            route.path === item.path 
+            isLinkActive(item.path) 
               ? 'bg-brand-gold-500 text-brand-blue-900 font-semibold shadow-md shadow-brand-gold-500/10' 
               : 'text-brand-blue-100 hover:bg-brand-blue-800 hover:text-white',
             'flex items-center gap-3.5 px-4 py-3 rounded-xl transition-all duration-200 group text-sm'
@@ -145,7 +152,7 @@ const initials = computed(() => {
           <component 
             :is="item.icon" 
             :class="[
-              route.path === item.path ? 'text-brand-blue-900' : 'text-brand-blue-300 group-hover:text-white',
+              isLinkActive(item.path) ? 'text-brand-blue-900' : 'text-brand-blue-300 group-hover:text-white',
               'w-5 h-5 transition-colors duration-200'
             ]" 
           />
@@ -174,28 +181,28 @@ const initials = computed(() => {
     <!-- Main Content Wrapper -->
     <div class="flex-1 flex flex-col min-w-0 overflow-hidden">
       <!-- Topbar Header -->
-      <header class="h-16 flex items-center justify-between px-6 bg-white dark:bg-dark-card border-b border-slate-200 dark:border-dark-border z-30 transition-colors duration-300">
-        <div class="flex items-center gap-4">
+      <header class="h-16 flex items-center justify-between px-3 sm:px-6 bg-white dark:bg-dark-card border-b border-slate-200 dark:border-dark-border z-30 transition-colors duration-300">
+        <div class="flex items-center gap-1.5 sm:gap-4">
           <!-- Mobile Sidebar Toggle -->
           <button @click="toggleSidebar" class="p-2 -ml-2 rounded-xl text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 lg:hidden transition-colors">
             <Menu class="w-6 h-6" />
           </button>
           <!-- Current Page Title with Komisariat Logo -->
-          <div class="flex items-center gap-2">
-            <img src="/logo.png" class="w-7 h-7 object-contain" alt="Logo Komisariat" />
-            <h2 class="text-sm sm:text-base font-extrabold text-slate-800 dark:text-slate-100 tracking-wide">{{ currentRouteName }}</h2>
+          <div class="flex items-center gap-1.5 sm:gap-2 min-w-0">
+            <img src="/logo.png" class="w-7 h-7 object-contain flex-shrink-0" alt="Logo Komisariat" />
+            <h2 class="text-sm sm:text-base font-extrabold text-slate-800 dark:text-slate-100 tracking-wide truncate max-w-[100px] sm:max-w-none">{{ currentRouteName }}</h2>
           </div>
         </div>
 
-        <div class="flex items-center gap-4">
+        <div class="flex items-center gap-1.5 sm:gap-4">
           <!-- Light/Dark Mode Switch -->
-          <button @click="toggleTheme" class="p-2.5 rounded-xl border border-slate-200 dark:border-dark-border text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-all duration-200">
+          <button @click="toggleTheme" class="p-2 sm:p-2.5 rounded-xl border border-slate-200 dark:border-dark-border text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-all duration-200">
             <Sun v-if="authStore.theme === 'dark'" class="w-5 h-5 text-amber-400 fill-amber-400" />
             <Moon v-else class="w-5 h-5 text-slate-700 fill-slate-100" />
           </button>
 
           <!-- Notifications Button -->
-          <router-link to="/dashboard/notifications" class="relative p-2.5 rounded-xl border border-slate-200 dark:border-dark-border text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-all duration-200">
+          <router-link to="/dashboard/notifications" class="relative p-2 sm:p-2.5 rounded-xl border border-slate-200 dark:border-dark-border text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-all duration-200">
             <Bell class="w-5 h-5" />
             <span v-if="notificationsCount > 0" class="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-rose-500 border-2 border-white dark:border-dark-card flex items-center justify-center text-[10px] font-bold text-white leading-none">
               {{ notificationsCount }}
@@ -206,13 +213,13 @@ const initials = computed(() => {
           <div class="relative">
             <button 
               @click="profileDropdownOpen = !profileDropdownOpen" 
-              class="flex items-center gap-2 p-1.5 rounded-xl border border-slate-200 dark:border-dark-border hover:bg-slate-50 dark:hover:bg-slate-800 transition-all duration-200"
+              class="flex items-center gap-1.5 p-1 sm:p-1.5 rounded-xl border border-slate-200 dark:border-dark-border hover:bg-slate-50 dark:hover:bg-slate-800 transition-all duration-200"
             >
               <div class="w-8 h-8 rounded-lg overflow-hidden bg-brand-blue-50 flex items-center justify-center font-bold text-brand-blue-500 border border-brand-blue-100">
                 <img v-if="user?.profile_photo_url" :src="getImageUrl(user.profile_photo_url)" alt="Avatar" class="w-full h-full object-cover" />
                 <span v-else>{{ initials }}</span>
               </div>
-              <ChevronDown class="w-4 h-4 text-slate-500 dark:text-slate-400" />
+              <ChevronDown class="w-4 h-4 text-slate-500 dark:text-slate-400 hidden sm:inline-block" />
             </button>
 
             <!-- Dropdown Menu -->
@@ -233,7 +240,7 @@ const initials = computed(() => {
       </header>
 
       <!-- Main Page Content Area -->
-      <main class="flex-grow overflow-y-auto p-6">
+      <main class="flex-grow overflow-y-auto p-4 sm:p-6">
         <router-view />
       </main>
     </div>

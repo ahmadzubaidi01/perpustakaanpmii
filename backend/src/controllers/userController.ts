@@ -1,6 +1,9 @@
 import { Request, Response } from 'express';
 import bcrypt from 'bcryptjs';
 import { Op } from 'sequelize';
+import fs from 'fs';
+import path from 'path';
+import crypto from 'crypto';
 import { User, Faculty, StudyProgram } from '../models';
 import { AuditActionType, TABLE_NAMES, UserRole, AccountStatus } from '../config/constants';
 import apiResponse from '../utils/apiResponse';
@@ -9,6 +12,21 @@ import { createAuditLog, buildAuditFromRequest } from '../services/auditService'
 import { validatePasswordComplexity } from '../utils/helpers';
 import { PAGINATION_DEFAULTS } from '../config/constants';
 import env from '../config/environment';
+
+const saveUploadedFile = (file: Express.Multer.File): string => {
+  const randomName = crypto.randomBytes(16).toString('hex');
+  const timestamp = Date.now();
+  const ext = path.extname(file.originalname).toLowerCase();
+  const filename = `${timestamp}-${randomName}${ext}`;
+  const uploadDir = path.resolve(__dirname, '..', '..', env.UPLOAD_DIR);
+  
+  if (!fs.existsSync(uploadDir)) {
+    fs.mkdirSync(uploadDir, { recursive: true });
+  }
+  
+  fs.writeFileSync(path.join(uploadDir, filename), file.buffer);
+  return `/uploads/${filename}`;
+};
 
 const listUsers = asyncHandler(async (req: Request, res: Response): Promise<void> => {
   const page = parseInt(req.query.page as string, 10) || PAGINATION_DEFAULTS.PAGE;
@@ -83,7 +101,7 @@ const createUser = asyncHandler(async (req: Request, res: Response): Promise<voi
   }
 
   const password_hash = await bcrypt.hash(password, env.BCRYPT_SALT_ROUNDS);
-  const profile_photo_url = req.file ? `/uploads/${req.file.filename}` : null;
+  const profile_photo_url = req.file ? saveUploadedFile(req.file) : null;
 
   const user = await User.create({
     full_name,
@@ -121,7 +139,7 @@ const updateUser = asyncHandler(async (req: Request, res: Response): Promise<voi
     if (existing) { apiResponse.conflict(res, 'NIM sudah digunakan'); return; }
   }
 
-  const profile_photo_url = req.file ? `/uploads/${req.file.filename}` : user.profile_photo_url;
+  const profile_photo_url = req.file ? saveUploadedFile(req.file) : user.profile_photo_url;
 
   await user.update({
     full_name: full_name || user.full_name,
@@ -158,7 +176,7 @@ const updateProfile = asyncHandler(async (req: Request, res: Response): Promise<
   if (!user) { apiResponse.notFound(res, 'User tidak ditemukan'); return; }
 
   const { full_name, phone_number } = req.body;
-  const profile_photo_url = req.file ? `/uploads/${req.file.filename}` : user.profile_photo_url;
+  const profile_photo_url = req.file ? saveUploadedFile(req.file) : user.profile_photo_url;
 
   await user.update({
     full_name: full_name || user.full_name,

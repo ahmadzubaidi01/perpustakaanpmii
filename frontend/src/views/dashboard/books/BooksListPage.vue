@@ -199,13 +199,13 @@ const submitEditBook = async () => {
     showEditModal.value = false;
     fetchBooks();
   } catch (err: any) {
-  console.error('ADD BOOK ERROR:', err);
+  console.error('UPDATE BOOK ERROR:', err);
 
   errorMsg.value =
     err?.message ||
     err?.error?.message ||
     err?.data?.message ||
-    'Gagal menambahkan buku';
+    'Gagal memperbarui buku';
 } finally {
     submitLoading.value = false;
   }

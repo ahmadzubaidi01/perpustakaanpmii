@@ -14,34 +14,7 @@ import { logStream } from '../services/logStream';
  * - Prevents direct executable access
  */
 
-const storage = multer.memoryStorage({
-  destination: (_req: Request, _file: Express.Multer.File, cb: (error: Error | null, destination: string) => void) => {
-    const uploadDir = path.resolve(__dirname, '..', '..', env.UPLOAD_DIR);
-    cb(null, uploadDir);
-  },
-  filename: (_req: Request, file: Express.Multer.File, cb: (error: Error | null, filename: string) => void) => {
-    // Secure randomized filename
-    const randomName = crypto.randomBytes(16).toString('hex');
-    const timestamp = Date.now();
-    const ext = path.extname(file.originalname).toLowerCase();
-
-    // Prevent dangerous/executable extensions
-    const dangerousExtensions = ['.exe', '.bat', '.cmd', '.sh', '.ps1', '.msi', '.com', '.vbs', '.js', '.php', '.py', '.rb'];
-    if (dangerousExtensions.includes(ext)) {
-      logStream.emitLog({
-        type: 'UPLOAD',
-        message: `Dangerous file upload attempt blocked: ${ext}`,
-        method: _req.method,
-        endpoint: _req.originalUrl,
-        ip: _req.ip || _req.socket?.remoteAddress
-      });
-      cb(new AppError('File type not allowed', 400), '');
-      return;
-    }
-
-    cb(null, `${timestamp}-${randomName}${ext}`);
-  },
-});
+const storage = multer.memoryStorage();
 
 const fileFilter = (_req: Request, file: Express.Multer.File, cb: multer.FileFilterCallback) => {
   // MIME type validation

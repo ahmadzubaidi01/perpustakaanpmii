@@ -5,7 +5,8 @@ import { useAuthStore } from '../../stores/auth';
 import api, { getImageUrl } from '../../lib/api';
 import { 
   BookOpen, Users, ClipboardList, AlertCircle, Clock, 
-  Search, ArrowRight, UserCheck, Calendar, Info, Bookmark, MapPin, X, Activity
+  Search, ArrowRight, UserCheck, Calendar, Info, Bookmark, MapPin, X, Activity,
+  Library
 } from '@lucide/vue';
 
 const authStore = useAuthStore();
@@ -66,6 +67,10 @@ const stats = ref<{
   monthly_borrowings?: any[];
   monthly_returns?: any[];
   recent_audit_logs?: any[];
+  active_users?: number;
+  total_categories?: number;
+  total_faculties?: number;
+  total_study_programs?: number;
 } | null>(null);
 const loading = ref(true);
 
@@ -361,6 +366,47 @@ const maxMonthlyCount = computed(() => {
           <div>
             <h4 class="text-slate-500 dark:text-slate-400 text-xs font-bold uppercase tracking-wider">Keterlambatan</h4>
             <p class="text-2xl font-black text-slate-800 dark:text-slate-100">{{ stats?.overdue_borrowings || 0 }}</p>
+          </div>
+        </div>
+
+        <!-- Super Admin specific cards -->
+        <div v-if="authStore.isSuperAdmin" class="bg-white dark:bg-dark-card border border-slate-200 dark:border-dark-border rounded-2xl p-5 flex items-center gap-4 shadow-sm">
+          <div class="w-12 h-12 rounded-xl bg-teal-50 dark:bg-teal-950/20 text-teal-650 dark:text-teal-400 flex items-center justify-center flex-shrink-0">
+            <UserCheck class="w-6 h-6" />
+          </div>
+          <div>
+            <h4 class="text-slate-500 dark:text-slate-400 text-xs font-bold uppercase tracking-wider">User Aktif</h4>
+            <p class="text-2xl font-black text-slate-800 dark:text-slate-100">{{ stats?.active_users || 0 }}</p>
+          </div>
+        </div>
+
+        <div v-if="authStore.isSuperAdmin" class="bg-white dark:bg-dark-card border border-slate-200 dark:border-dark-border rounded-2xl p-5 flex items-center gap-4 shadow-sm">
+          <div class="w-12 h-12 rounded-xl bg-amber-50 dark:bg-amber-950/20 text-amber-500 dark:text-amber-400 flex items-center justify-center flex-shrink-0">
+            <Bookmark class="w-6 h-6" />
+          </div>
+          <div>
+            <h4 class="text-slate-500 dark:text-slate-400 text-xs font-bold uppercase tracking-wider">Kategori</h4>
+            <p class="text-2xl font-black text-slate-800 dark:text-slate-100">{{ stats?.total_categories || 0 }}</p>
+          </div>
+        </div>
+
+        <div v-if="authStore.isSuperAdmin" class="bg-white dark:bg-dark-card border border-slate-200 dark:border-dark-border rounded-2xl p-5 flex items-center gap-4 shadow-sm">
+          <div class="w-12 h-12 rounded-xl bg-purple-50 dark:bg-purple-950/20 text-purple-500 dark:text-purple-400 flex items-center justify-center flex-shrink-0">
+            <Library class="w-6 h-6" />
+          </div>
+          <div>
+            <h4 class="text-slate-500 dark:text-slate-400 text-xs font-bold uppercase tracking-wider">Fakultas</h4>
+            <p class="text-2xl font-black text-slate-800 dark:text-slate-100">{{ stats?.total_faculties || 0 }}</p>
+          </div>
+        </div>
+
+        <div v-if="authStore.isSuperAdmin" class="bg-white dark:bg-dark-card border border-slate-200 dark:border-dark-border rounded-2xl p-5 flex items-center gap-4 shadow-sm">
+          <div class="w-12 h-12 rounded-xl bg-pink-50 dark:bg-pink-950/20 text-pink-500 dark:text-pink-400 flex items-center justify-center flex-shrink-0">
+            <Library class="w-6 h-6" />
+          </div>
+          <div>
+            <h4 class="text-slate-500 dark:text-slate-400 text-xs font-bold uppercase tracking-wider">Prodi</h4>
+            <p class="text-2xl font-black text-slate-800 dark:text-slate-100">{{ stats?.total_study_programs || 0 }}</p>
           </div>
         </div>
       </div>

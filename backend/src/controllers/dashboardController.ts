@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
 import { Op, fn, col, literal } from 'sequelize';
-import { User, Book, Borrowing, AuditLog } from '../models';
-import { BorrowingStatus, UserRole } from '../config/constants';
+import { User, Book, Borrowing, AuditLog, Faculty, StudyProgram, BookCategory, UserSession } from '../models';
+import { BorrowingStatus, UserRole, SessionStatus } from '../config/constants';
 import apiResponse from '../utils/apiResponse';
 import { asyncHandler } from '../middleware/errorHandler';
 
@@ -53,30 +53,30 @@ const getDashboard = asyncHandler(async (req: Request, res: Response): Promise<v
 
   const monthlyBorrowings = await Borrowing.findAll({
     attributes: [
-      [fn('YEAR', col('borrowed_at')), 'year'],
-      [fn('MONTH', col('borrowed_at')), 'month'],
+      [literal('EXTRACT(YEAR FROM "borrowed_at")'), 'year'],
+      [literal('EXTRACT(MONTH FROM "borrowed_at")'), 'month'],
       [fn('COUNT', col('borrowing_id')), 'count'],
     ],
     where: {
       borrowed_at: { [Op.gte]: sixMonthsAgo },
       borrowing_status: { [Op.in]: [BorrowingStatus.BORROWED, BorrowingStatus.RETURNED, BorrowingStatus.OVERDUE] },
     },
-    group: [fn('YEAR', col('borrowed_at')), fn('MONTH', col('borrowed_at'))],
-    order: [[fn('YEAR', col('borrowed_at')), 'ASC'], [fn('MONTH', col('borrowed_at')), 'ASC']],
+    group: [literal('EXTRACT(YEAR FROM "borrowed_at")') as any, literal('EXTRACT(MONTH FROM "borrowed_at")') as any],
+    order: [[literal('EXTRACT(YEAR FROM "borrowed_at")'), 'ASC'], [literal('EXTRACT(MONTH FROM "borrowed_at")'), 'ASC']],
     raw: true,
   });
 
   const monthlyReturns = await Borrowing.findAll({
     attributes: [
-      [fn('YEAR', col('returned_at')), 'year'],
-      [fn('MONTH', col('returned_at')), 'month'],
+      [literal('EXTRACT(YEAR FROM "returned_at")'), 'year'],
+      [literal('EXTRACT(MONTH FROM "returned_at")'), 'month'],
       [fn('COUNT', col('returned_at')), 'count'],
     ],
     where: {
       returned_at: { [Op.gte]: sixMonthsAgo, [Op.ne]: null },
     },
-    group: [fn('YEAR', col('returned_at')), fn('MONTH', col('returned_at'))],
-    order: [[fn('YEAR', col('returned_at')), 'ASC'], [fn('MONTH', col('returned_at')), 'ASC']],
+    group: [literal('EXTRACT(YEAR FROM "returned_at")') as any, literal('EXTRACT(MONTH FROM "returned_at")') as any],
+    order: [[literal('EXTRACT(YEAR FROM "returned_at")'), 'ASC'], [literal('EXTRACT(MONTH FROM "returned_at")'), 'ASC']],
     raw: true,
   });
 
@@ -98,12 +98,35 @@ const getDashboard = asyncHandler(async (req: Request, res: Response): Promise<v
 
   // Recent audit logs (super_admin only)
   let recentAuditLogs: any[] = [];
+  let activeUsersCount = 0;
+  let totalCategories = 0;
+  let totalFaculties = 0;
+  let totalStudyPrograms = 0;
+
   if (userRole === UserRole.SUPER_ADMIN) {
-    recentAuditLogs = await AuditLog.findAll({
-      order: [['created_at', 'DESC']],
-      limit: 10,
-      include: [{ association: 'performed_by', attributes: ['user_id', 'full_name'] }],
-    });
+    const [actLogs, actUsers, catCount, facCount, progCount] = await Promise.all([
+      AuditLog.findAll({
+        order: [['created_at', 'DESC']],
+        limit: 10,
+        include: [{ association: 'performed_by', attributes: ['user_id', 'full_name'] }],
+      }),
+      UserSession.count({
+        distinct: true,
+        col: 'user_id',
+        where: {
+          session_status: SessionStatus.ACTIVE,
+          expired_at: { [Op.gt]: new Date() },
+        },
+      }),
+      BookCategory.count(),
+      Faculty.count(),
+      StudyProgram.count(),
+    ]);
+    recentAuditLogs = actLogs;
+    activeUsersCount = actUsers;
+    totalCategories = catCount;
+    totalFaculties = facCount;
+    totalStudyPrograms = progCount;
   }
 
   apiResponse.success(res, 'Dashboard', {
@@ -118,6 +141,10 @@ const getDashboard = asyncHandler(async (req: Request, res: Response): Promise<v
     monthly_returns: monthlyReturns,
     popular_books: popularBooks,
     recent_audit_logs: recentAuditLogs,
+    active_users: activeUsersCount,
+    total_categories: totalCategories,
+    total_faculties: totalFaculties,
+    total_study_programs: totalStudyPrograms,
   });
 });
 

@@ -41,9 +41,8 @@ const handleLogin = async () => {
     <div class="w-full max-w-md bg-white dark:bg-dark-card border border-slate-200 dark:border-dark-border rounded-2xl shadow-xl p-8 transition-all">
       <!-- Rebranding / Logo Header -->
       <div class="flex flex-col items-center mb-8">
-        <div class="flex gap-4 mb-4">
-          <img src="/logo.png" class="w-16 h-16 object-contain filter drop-shadow-sm" alt="Logo PMII Lintang Songo" />
-          <img src="/logo_kopri.png" class="w-16 h-16 object-contain filter drop-shadow-sm" alt="Logo Kopri" />
+        <div class="mb-4">
+          <img src="/logo.png" class="w-16 h-16 object-contain filter drop-shadow-sm" alt="Logo Pustaka Jalanan" />
         </div>
         <h1 class="text-2xl font-black text-slate-800 dark:text-slate-100">Buku Pustaka Jalanan</h1>
         <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">Sistem Peminjaman</p>
